@@ -11,6 +11,8 @@ export type Settings = {
   hero_type: HeroType;
   hero_media: string | null;
   hero_dir: HeroDir;
+  contact_email: string | null;
+  contact_phone: string | null;
 };
 
 export type HeroType = "logo" | "imagen" | "video";
@@ -79,7 +81,12 @@ export const DEFAULT_SETTINGS: Settings = {
   hero_type: "logo",
   hero_media: null,
   hero_dir: "ltr",
+  contact_email: null,
+  contact_phone: null,
 };
+
+// Link de WhatsApp a partir del teléfono (solo dígitos, con código de país).
+export const whatsappLink = (phone: string) => `https://wa.me/${phone.replace(/\D/g, "")}`;
 
 // Tipografías de Google Fonts que se ofrecen en el admin.
 export const DISPLAY_FONTS = [

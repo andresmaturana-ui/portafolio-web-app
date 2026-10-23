@@ -1,7 +1,6 @@
-// Datos generales del sitio. Cambia aquí tu email y redes.
+// Datos generales del sitio. El email y el teléfono se editan en /admin/ajustes.
 export const site = {
   name: "Andrés Maturana",
-  email: "[tu@email.com]",
   photoSite: "https://www.andresmaturana.com",
   services: [
     { name: "Apps móviles", detail: "iOS · Android" },

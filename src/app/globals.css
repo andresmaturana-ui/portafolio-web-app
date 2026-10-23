@@ -204,6 +204,14 @@ img { display: block; max-width: 100%; }
 .contact { display: flex; flex-wrap: wrap; gap: 48px; justify-content: space-between; border-top: 1px solid var(--line-soft); }
 .contact-title { margin: 0; font-size: clamp(36px, 6vw, 88px); line-height: 0.95; letter-spacing: -0.03em; }
 .services { flex: 1 1 320px; display: flex; flex-direction: column; gap: 14px; font-size: 20px; }
+.contact-side { flex: 1 1 380px; display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+.contact-side .services { font-size: 17px; }
+.contact-direct { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.contact-line { display: flex; flex-direction: column; gap: 4px; color: var(--text); text-decoration: none; font-size: clamp(18px, 2vw, 24px); overflow-wrap: anywhere; }
+.contact-line:hover { color: var(--accent); }
+.contact-form { display: grid; gap: 20px; padding: clamp(20px, 3vw, 32px); border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.contact-sent { min-height: 240px; align-content: center; }
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .service { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -504,3 +512,10 @@ img { display: block; max-width: 100%; }
   .slide-fields { grid-template-columns: minmax(0, 1fr); }
   .slide-actions { grid-column: 1 / -1; }
 }
+.messages { display: grid; gap: 14px; }
+.message { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.message.is-new { border-color: var(--accent); }
+.message-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.message-head h3 { margin: 0 0 4px; font-size: 18px; }
+.message-body { margin: 16px 0 12px; white-space: pre-line; line-height: 1.55; color: var(--soft); overflow-wrap: anywhere; }
+.message-meta { margin: 0; font-size: 14px; overflow-wrap: anywhere; }

@@ -113,6 +113,21 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
       <input type="hidden" name="hero_media" value={s.hero_type === "logo" ? "" : (s.hero_media ?? "")} />
 
       <section className="settings-block">
+        <h2 className="settings-h">Contacto</h2>
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor="contact_email">Email</label>
+            <input className="input" id="contact_email" name="contact_email" type="email" value={s.contact_email ?? ""} onChange={(e) => set("contact_email", e.target.value || null)} />
+          </div>
+          <div className="field">
+            <label htmlFor="contact_phone">Teléfono / WhatsApp</label>
+            <input className="input" id="contact_phone" name="contact_phone" type="tel" placeholder="+56 9 1234 5678" value={s.contact_phone ?? ""} onChange={(e) => set("contact_phone", e.target.value || null)} />
+          </div>
+        </div>
+        <span className="label">Se muestran en la sección Contacto. El teléfono lleva el código de país (+56) para que funcione el botón de WhatsApp. Los mensajes del formulario llegan a Mensajes.</span>
+      </section>
+
+      <section className="settings-block">
         <h2 className="settings-h">Logo</h2>
         <div className="settings-logo">
           <img src={s.logo_url ?? "/logo.png"} alt="Logo actual" />

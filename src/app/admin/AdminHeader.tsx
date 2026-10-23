@@ -10,6 +10,7 @@ export function AdminHeader() {
       </Link>
       <nav className="site-nav" aria-label="Administrador">
         <Link className="mono" href="/admin">Proyectos</Link>
+        <Link className="mono" href="/admin/mensajes">Mensajes</Link>
         <Link className="mono" href="/admin/ajustes">Ajustes</Link>
         <Link className="mono" href="/" target="_blank">Ver sitio ↗</Link>
         <form action={signOut}>

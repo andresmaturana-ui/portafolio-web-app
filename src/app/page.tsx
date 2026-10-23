@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
-import { heroLook, heroSlides } from "@/lib/settings";
+import { heroLook, heroSlides, whatsappLink } from "@/lib/settings";
+import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
 import type { Project } from "@/lib/types";
@@ -143,20 +144,39 @@ export default async function Home() {
         )}
 
         <section id="contacto" className="section contact">
-          <div className="rv" style={{ flex: "1 1 380px" }}>
-            <p className="mono eyebrow">Servicios</p>
+          <div className="contact-side rv">
+            <p className="mono eyebrow">Contacto</p>
             <h2 className="contact-title">¿Construimos algo?</h2>
+            <div className="contact-direct">
+              {settings.contact_phone && (
+                <a className="btn" href={whatsappLink(settings.contact_phone)} target="_blank" rel="noopener">
+                  WhatsApp ↗
+                </a>
+              )}
+              {settings.contact_phone && (
+                <a className="contact-line" href={`tel:${settings.contact_phone.replace(/[^\d+]/g, "")}`}>
+                  <span className="mono">Teléfono</span>
+                  {settings.contact_phone}
+                </a>
+              )}
+              {settings.contact_email && (
+                <a className="contact-line" href={`mailto:${settings.contact_email}`}>
+                  <span className="mono">Email</span>
+                  {settings.contact_email}
+                </a>
+              )}
+            </div>
+            <div className="services">
+              {site.services.map((s) => (
+                <div key={s.name} className="service">
+                  <span>{s.name}</span>
+                  <span className="mono">{s.detail}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="services rv">
-            {site.services.map((s) => (
-              <div key={s.name} className="service">
-                <span>{s.name}</span>
-                <span className="mono">{s.detail}</span>
-              </div>
-            ))}
-            <a className="btn" href={`mailto:${site.email}`} style={{ marginTop: 16, alignSelf: "flex-start" }}>
-              Escríbeme
-            </a>
+          <div className="rv" style={{ flex: "1 1 420px", minWidth: 0 }}>
+            <ContactForm services={site.services.map((s) => s.name)} />
           </div>
         </section>
       </main>

@@ -12,3 +12,4 @@ export const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "")
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export const BUCKET = "portfolio";
 export const TABLE = "portfolio_projects";
+export const MESSAGES_TABLE = "portfolio_messages";

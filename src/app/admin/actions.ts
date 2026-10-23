@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { slugify } from "@/lib/projects";
 import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, SETTINGS_TABLE, type Settings } from "@/lib/settings";
-import { TABLE } from "@/lib/supabase/config";
+import { MESSAGES_TABLE, TABLE } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, type Category } from "@/lib/types";
 
@@ -101,11 +101,13 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
     hero_type: pick("hero_type", ["logo", "imagen", "video"], "logo"),
     hero_media: String(formData.get("hero_media") ?? "").trim() || null,
     hero_dir: pick("hero_dir", ["ltr", "rtl"], "ltr"),
+    contact_email: String(formData.get("contact_email") ?? "").trim() || null,
+    contact_phone: String(formData.get("contact_phone") ?? "").trim() || null,
     updated_at: new Date().toISOString(),
   };
   const { error } = await supabase.from(SETTINGS_TABLE).upsert(record);
   if (error) {
-    if (/hero_/.test(error.message)) {
+    if (/hero_|contact_/.test(error.message)) {
       return { error: "Falta actualizar la tabla de ajustes: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase." };
     }
     if (/portfolio_settings/.test(error.message)) {
@@ -115,4 +117,18 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
   }
   revalidatePath("/", "layout");
   return { ok: true };
+}
+
+export async function markMessage(formData: FormData) {
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+  if (id) await supabase.from(MESSAGES_TABLE).update({ read: formData.get("read") === "1" }).eq("id", id);
+  revalidatePath("/admin/mensajes");
+}
+
+export async function deleteMessage(formData: FormData) {
+  const supabase = await createClient();
+  const id = String(formData.get("id") ?? "");
+  if (id) await supabase.from(MESSAGES_TABLE).delete().eq("id", id);
+  revalidatePath("/admin/mensajes");
 }
