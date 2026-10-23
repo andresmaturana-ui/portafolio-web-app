@@ -20,7 +20,12 @@ export default function LoginPage() {
       password: String(form.get("password")),
     });
     setLoading(false);
-    if (error) return setError("Email o contraseña incorrectos.");
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("not confirmed")) return setError("Tu email no está confirmado. En Supabase → Authentication → Users, confirma el usuario o créalo con “Auto Confirm User”.");
+      if (msg.includes("invalid login")) return setError("Email o contraseña incorrectos (o el usuario no existe en este proyecto de Supabase).");
+      return setError(`No se pudo iniciar sesión: ${error.message}`);
+    }
     router.replace("/admin");
     router.refresh();
   }
