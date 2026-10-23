@@ -23,7 +23,7 @@ const COLORS: { name: "color_bg" | "color_text" | "color_accent"; label: string 
   { name: "color_text", label: "Texto" },
 ];
 
-export type ProjectOption = { slug: string; title: string; year: number | null; images: string[] };
+export type ProjectOption = { slug: string; title: string; client: string | null; year: number | null; images: string[] };
 
 export function SettingsForm({ initial, projects }: { initial: Settings; projects: ProjectOption[] }) {
   const [state, formAction, saving] = useActionState<SettingsState, FormData>(saveSettings, {});
@@ -67,6 +67,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
     editSlide(i, {
       slug: slug || undefined,
       title: cur.title || p?.title,
+      client: cur.client || p?.client || undefined,
       year: cur.year || (p?.year ? String(p.year) : undefined),
     });
   };
@@ -157,6 +158,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                     </div>
                     <div className="slide-fields">
                       <input className="input" placeholder="Nombre (opcional)" aria-label={`Nombre de la foto ${i + 1}`} value={slide.title ?? ""} onChange={(e) => editSlide(i, { title: e.target.value || undefined })} />
+                      <input className="input" placeholder="Cliente" aria-label={`Cliente de la foto ${i + 1}`} value={slide.client ?? ""} onChange={(e) => editSlide(i, { client: e.target.value || undefined })} />
                       <input className="input" placeholder="Año" inputMode="numeric" aria-label={`Año de la foto ${i + 1}`} value={slide.year ?? ""} onChange={(e) => editSlide(i, { year: e.target.value || undefined })} />
                       <select className="select" aria-label={`Proyecto de la foto ${i + 1}`} value={slide.slug ?? ""} onChange={(e) => linkProject(i, e.target.value)}>
                         <option value="">Sin enlace a proyecto</option>
@@ -204,7 +206,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                           className={`thumb thumb-pick ${added ? "is-on" : ""}`}
                           disabled={added}
                           onClick={() =>
-                            addSlides([{ src, title: pickedProject.title, year: pickedProject.year ? String(pickedProject.year) : undefined, slug: pickedProject.slug }])
+                            addSlides([{ src, title: pickedProject.title, client: pickedProject.client ?? undefined, year: pickedProject.year ? String(pickedProject.year) : undefined, slug: pickedProject.slug }])
                           }
                         >
                           <img src={src} alt="" />
@@ -233,7 +235,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
             <span className="label">
               {s.hero_type === "video"
                 ? "MP4 corto (5 a 10 s), horizontal y de menos de 50 MB. Mientras más suave el movimiento de cámara, mejor se ve al hacer scroll."
-                : "Sube fotos o elígelas de tus proyectos: pasan una tras otra en este orden. A cada una le puedes poner nombre, año y enlace a su proyecto."}
+                : "Sube fotos o elígelas de tus proyectos: pasan una tras otra en este orden. A cada una le puedes poner nombre, cliente, año y enlace a su proyecto."}
             </span>
             {heroError && <div className="notice notice--error" role="alert">{heroError}</div>}
             {!s.hero_media && <span className="label">Mientras no subas un archivo, la portada sigue mostrando el logo.</span>}

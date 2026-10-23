@@ -55,7 +55,7 @@ export default async function Home() {
             {hero === "imagen" && (
               <div className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"}`}>
                 {heroSlides(settings).map((slide, i) => {
-                  const caption = [slide.title, slide.year].filter(Boolean).join(" · ");
+                  const caption = [slide.title, slide.client, slide.year].filter(Boolean).join(" · ");
                   const body = (
                     <>
                       <img src={slide.src} alt={slide.title ?? ""} />

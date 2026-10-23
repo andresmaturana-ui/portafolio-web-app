@@ -18,10 +18,11 @@ export default async function SettingsPage() {
   const settings = await getSettings();
   let projects: ProjectOption[] = [];
   if (supabase && isAdmin) {
-    const { data } = await supabase.from(TABLE).select("slug,title,year,cover_url,gallery").order("sort").order("created_at", { ascending: false });
+    const { data } = await supabase.from(TABLE).select("slug,title,client,year,cover_url,gallery").order("sort").order("created_at", { ascending: false });
     projects = (data ?? []).map((p) => ({
       slug: p.slug,
       title: p.title,
+      client: p.client,
       year: p.year,
       images: [p.cover_url, ...(p.gallery ?? [])].filter(Boolean) as string[],
     }));

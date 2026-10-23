@@ -17,7 +17,7 @@ export type HeroType = "logo" | "imagen" | "video";
 export type HeroDir = "ltr" | "rtl";
 
 // Cada foto de la portada panorámica, con su pie opcional y el proyecto al que enlaza.
-export type HeroSlide = { src: string; title?: string; year?: string; slug?: string };
+export type HeroSlide = { src: string; title?: string; client?: string; year?: string; slug?: string };
 
 // hero_media guarda las fotos como JSON; las primeras versiones usaban una URL por línea.
 export function heroSlides(s: Pick<Settings, "hero_media">): HeroSlide[] {
