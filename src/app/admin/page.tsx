@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {
   const { cat } = await searchParams;
-  const { supabase, isAdmin, email } = await requireUser();
+  const { supabase, isAdmin, email, adminError } = await requireUser();
 
   let projects: Project[] = [];
   if (supabase && isAdmin) {
@@ -33,7 +33,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           )}
         </div>
         {!supabase && <NotConfigured />}
-        {supabase && !isAdmin && <NotAdmin email={email} />}
+        {supabase && !isAdmin && <NotAdmin email={email} error={adminError} />}
         {isAdmin && (
           <>
             <nav className="tabs" aria-label="Filtrar por categoría">

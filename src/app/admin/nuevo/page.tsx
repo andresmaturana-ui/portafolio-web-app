@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewProjectPage({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {
   const { cat } = await searchParams;
-  const { supabase, isAdmin, email } = await requireUser();
+  const { supabase, isAdmin, email, adminError } = await requireUser();
   return (
     <>
       <AdminHeader />
@@ -19,7 +19,7 @@ export default async function NewProjectPage({ searchParams }: { searchParams: P
           <Link className="mono" href="/admin">← Proyectos</Link>
         </div>
         {!supabase && <NotConfigured />}
-        {supabase && !isAdmin && <NotAdmin email={email} />}
+        {supabase && !isAdmin && <NotAdmin email={email} error={adminError} />}
         {isAdmin && <ProjectForm defaultCategory={(cat as Category) ?? "app"} />}
       </main>
     </>

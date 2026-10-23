@@ -8,11 +8,18 @@ export function NotConfigured() {
   );
 }
 
-export function NotAdmin({ email }: { email: string | null }) {
+export function NotAdmin({ email, error }: { email: string | null; error?: string | null }) {
   return (
     <div className="notice notice--error">
       Tu cuenta ({email}) no está en la lista de administradores. En Supabase → SQL Editor ejecuta:{" "}
       <code>insert into portfolio_admins (email) values (&apos;{email}&apos;);</code>
+      {error && (
+        <>
+          <br />
+          <br />
+          Detalle técnico: {error}
+        </>
+      )}
     </div>
   );
 }

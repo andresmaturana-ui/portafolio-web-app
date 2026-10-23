@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase, isAdmin, email } = await requireUser();
+  const { supabase, isAdmin, email, adminError } = await requireUser();
   let project: Project | null = null;
   if (supabase && isAdmin) {
     const { data } = await supabase.from(TABLE).select("*").eq("id", id).maybeSingle();
@@ -27,7 +27,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
           <Link className="mono" href="/admin">← Proyectos</Link>
         </div>
         {!supabase && <NotConfigured />}
-        {supabase && !isAdmin && <NotAdmin email={email} />}
+        {supabase && !isAdmin && <NotAdmin email={email} error={adminError} />}
         {project && <ProjectForm project={project} />}
       </main>
     </>
