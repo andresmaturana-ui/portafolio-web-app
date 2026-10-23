@@ -10,6 +10,7 @@ import {
   heroSlides,
   MONO_FONTS,
   PALETTES,
+  SECTIONS,
   serializeHero,
   settingsStyle,
   type HeroLook,
@@ -50,6 +51,13 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
     else set("logo_url", supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
     setUploading(false);
   }
+
+  const moveSection = (i: number, to: number) => {
+    const next = [...s.section_order];
+    const [item] = next.splice(i, 1);
+    next.splice(to, 0, item);
+    set("section_order", next);
+  };
 
   const slides = heroSlides(s);
   const look = heroLook(s);
@@ -111,6 +119,28 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
     <form action={formAction} className="form settings">
       <input type="hidden" name="logo_url" value={s.logo_url ?? ""} />
       <input type="hidden" name="hero_media" value={s.hero_type === "logo" ? "" : (s.hero_media ?? "")} />
+
+      <section className="settings-block">
+        <h2 className="settings-h">Orden de las secciones</h2>
+        <input type="hidden" name="section_order" value={s.section_order.join(",")} />
+        <ol className="order-list">
+          {s.section_order.map((id, i) => (
+            <li key={id} className="order-item">
+              <span className="mono order-n">{String(i + 1).padStart(2, "0")}</span>
+              <strong>{SECTIONS.find((x) => x.value === id)?.label}</strong>
+              <span className="order-actions">
+                <button type="button" className="btn btn--ghost" disabled={i === 0} onClick={() => moveSection(i, i - 1)} aria-label="Subir">
+                  ↑
+                </button>
+                <button type="button" className="btn btn--ghost" disabled={i === s.section_order.length - 1} onClick={() => moveSection(i, i + 1)} aria-label="Bajar">
+                  ↓
+                </button>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <span className="label">Así aparecen en la página de inicio y en el menú, después de la portada. Contacto siempre va al final.</span>
+      </section>
 
       <section className="settings-block">
         <h2 className="settings-h">Contacto</h2>

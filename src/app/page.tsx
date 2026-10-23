@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
-import { heroLook, heroSlides, whatsappLink } from "@/lib/settings";
+import { heroLook, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
 import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
@@ -27,6 +28,80 @@ export default async function Home() {
   let n = 0;
   const next = () => pad2(++n);
 
+  // Cada sección es una función para poder dibujarlas en el orden elegido en Ajustes.
+  const sections: Record<SectionId, () => React.ReactNode> = {
+    app: () => (
+      <>
+        {apps.map((p, i) => (
+          <AppScene key={p.id} project={p} index={next()} id={i === 0 ? "apps" : undefined} />
+        ))}
+      </>
+    ),
+    web: () => (
+      <>
+        {webs.map((p, i) => (
+          <WebScene key={p.id} project={p} index={next()} id={i === 0 ? "web" : undefined} />
+        ))}
+      </>
+    ),
+    foto: () => (
+      <>
+        {photos.length === 0 && (
+          <section id="foto" className="section">
+            <p className="mono eyebrow">{next()} — Fotografía</p>
+            <h2 className="h2">Mirada propia</h2>
+            <a className="btn" href={site.photoSite} style={{ marginTop: 32 }}>
+              Ver mis fotografías ↗
+            </a>
+          </section>
+        )}
+
+        {photos.length > 0 && (
+          <section id="foto" className="track" style={{ height: Math.max(1800, 900 + photos.length * 380) }}>
+            <div className="stage photo-stage">
+              <div className="photo-head">
+                <div>
+                  <p className="mono eyebrow">{next()} — Fotografía</p>
+                  <h2 className="h2">Mirada propia</h2>
+                </div>
+                <a className="mono" href={site.photoSite}>
+                  Ver galería completa ↗
+                </a>
+              </div>
+              <div className="strip anim k-strip">
+                {photos.map((p) => (
+                  <Link key={p.id} href={`/proyectos/${p.slug}`} className="photo">
+                    {p.cover_url && <img src={p.cover_url} alt={p.title} loading="lazy" />}
+                    {!p.cover_url && <span className="mono">{p.title}</span>}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+      </>
+    ),
+    diseno: () => (
+      <>
+        {designs.length > 0 && (
+          <section id="diseno" className="section">
+            <p className="mono eyebrow">{next()} — Diseño gráfico</p>
+            <h2 className="h2">Identidad, piezas y sistemas</h2>
+            <div className="cards">
+              {designs.map((p) => (
+                <Link key={p.id} href={`/proyectos/${p.slug}`} className="card rv">
+                  <span className="mono">{p.summary || "Diseño"}</span>
+                  <div className="card-media">{p.cover_url && <img src={p.cover_url} alt="" loading="lazy" />}</div>
+                  <h3>{p.title}</h3>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+      </>
+    ),
+  };
+
   return (
     <>
       <header className="site-header">
@@ -37,10 +112,12 @@ export default async function Home() {
           </span>
         </a>
         <nav className="site-nav" aria-label="Secciones">
-          {apps.length > 0 && <a className="mono" href="#apps">Apps</a>}
-          {webs.length > 0 && <a className="mono hide-sm" href="#web">Web</a>}
-          <a className="mono" href="#foto">Fotografía</a>
-          {designs.length > 0 && <a className="mono hide-sm" href="#diseno">Diseño</a>}
+          {settings.section_order.map((id) => {
+            if (id === "app") return apps.length > 0 && <a key={id} className="mono" href="#apps">Apps</a>;
+            if (id === "web") return webs.length > 0 && <a key={id} className="mono hide-sm" href="#web">Web</a>;
+            if (id === "foto") return <a key={id} className="mono" href="#foto">Fotografía</a>;
+            return designs.length > 0 && <a key={id} className="mono hide-sm" href="#diseno">Diseño</a>;
+          })}
           <a className="mono" href="#contacto">Contacto</a>
         </nav>
       </header>
@@ -87,63 +164,9 @@ export default async function Home() {
           </div>
         </section>
 
-        {apps.map((p, i) => (
-          <AppScene key={p.id} project={p} index={next()} id={i === 0 ? "apps" : undefined} />
+        {settings.section_order.map((id) => (
+          <Fragment key={id}>{sections[id]()}</Fragment>
         ))}
-
-        {webs.map((p, i) => (
-          <WebScene key={p.id} project={p} index={next()} id={i === 0 ? "web" : undefined} />
-        ))}
-
-        {photos.length === 0 && (
-          <section id="foto" className="section">
-            <p className="mono eyebrow">{next()} — Fotografía</p>
-            <h2 className="h2">Mirada propia</h2>
-            <a className="btn" href={site.photoSite} style={{ marginTop: 32 }}>
-              Ver mis fotografías ↗
-            </a>
-          </section>
-        )}
-
-        {photos.length > 0 && (
-          <section id="foto" className="track" style={{ height: Math.max(1800, 900 + photos.length * 380) }}>
-            <div className="stage photo-stage">
-              <div className="photo-head">
-                <div>
-                  <p className="mono eyebrow">{next()} — Fotografía</p>
-                  <h2 className="h2">Mirada propia</h2>
-                </div>
-                <a className="mono" href={site.photoSite}>
-                  Ver galería completa ↗
-                </a>
-              </div>
-              <div className="strip anim k-strip">
-                {photos.map((p) => (
-                  <Link key={p.id} href={`/proyectos/${p.slug}`} className="photo">
-                    {p.cover_url && <img src={p.cover_url} alt={p.title} loading="lazy" />}
-                    {!p.cover_url && <span className="mono">{p.title}</span>}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {designs.length > 0 && (
-          <section id="diseno" className="section">
-            <p className="mono eyebrow">{next()} — Diseño gráfico</p>
-            <h2 className="h2">Identidad, piezas y sistemas</h2>
-            <div className="cards">
-              {designs.map((p) => (
-                <Link key={p.id} href={`/proyectos/${p.slug}`} className="card rv">
-                  <span className="mono">{p.summary || "Diseño"}</span>
-                  <div className="card-media">{p.cover_url && <img src={p.cover_url} alt="" loading="lazy" />}</div>
-                  <h3>{p.title}</h3>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
 
         <section id="contacto" className="section contact">
           <div className="contact-side rv">

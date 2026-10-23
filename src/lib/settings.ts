@@ -13,7 +13,26 @@ export type Settings = {
   hero_dir: HeroDir;
   contact_email: string | null;
   contact_phone: string | null;
+  section_order: SectionId[];
 };
+
+// Orden de las secciones de trabajos en la página de inicio.
+export type SectionId = "app" | "web" | "foto" | "diseno";
+export const SECTIONS: { value: SectionId; label: string }[] = [
+  { value: "app", label: "Apps" },
+  { value: "web", label: "Web" },
+  { value: "foto", label: "Fotografía" },
+  { value: "diseno", label: "Diseño" },
+];
+export function parseSectionOrder(raw: unknown): SectionId[] {
+  const ids = SECTIONS.map((s) => s.value);
+  const given = String(raw ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter((x): x is SectionId => ids.includes(x as SectionId));
+  const unique = [...new Set(given)];
+  return [...unique, ...ids.filter((id) => !unique.includes(id))];
+}
 
 export type HeroType = "logo" | "imagen" | "video";
 export type HeroDir = "ltr" | "rtl";
@@ -83,6 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hero_dir: "ltr",
   contact_email: null,
   contact_phone: null,
+  section_order: ["app", "web", "foto", "diseno"],
 };
 
 // Link de WhatsApp a partir del teléfono (solo dígitos, con código de país).
