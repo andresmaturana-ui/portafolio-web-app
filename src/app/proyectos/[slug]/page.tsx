@@ -34,7 +34,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
     <>
       <header className="site-header">
         <Link href="/" className="brand">
-          <img src="/logo.png" alt="" />
+          <img src="/marca/logo" alt="" />
           <span className="mono" style={{ color: "var(--text)" }}>← Volver</span>
         </Link>
         {p.link && (
@@ -48,7 +48,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
       </article>
       <footer className="site-footer">
         <Link className="mono" href="/#contacto">¿Construimos algo? →</Link>
-        <img src="/logo.png" alt="Logo de Andrés Maturana" />
+        <img src="/marca/logo" alt="Logo de Andrés Maturana" />
       </footer>
     </>
   );

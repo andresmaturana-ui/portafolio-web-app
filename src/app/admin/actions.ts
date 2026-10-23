@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { slugify } from "@/lib/projects";
+import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, SETTINGS_TABLE, type Settings } from "@/lib/settings";
 import { TABLE } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, type Category } from "@/lib/types";
@@ -75,4 +76,37 @@ export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/admin/login");
+}
+
+export type SettingsState = { error?: string; ok?: boolean };
+
+export async function saveSettings(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
+  const supabase = await createClient();
+  const pick = (name: string, allowed: string[], fallback: string) => {
+    const v = String(formData.get(name) ?? "");
+    return allowed.includes(v) ? v : fallback;
+  };
+  const color = (name: keyof Settings) => {
+    const v = String(formData.get(name) ?? "").toLowerCase();
+    return isHex(v) ? v : (DEFAULT_SETTINGS[name] as string);
+  };
+  const record = {
+    id: 1,
+    logo_url: String(formData.get("logo_url") ?? "").trim() || null,
+    font_display: pick("font_display", DISPLAY_FONTS, DEFAULT_SETTINGS.font_display),
+    font_mono: pick("font_mono", MONO_FONTS, DEFAULT_SETTINGS.font_mono),
+    color_bg: color("color_bg"),
+    color_text: color("color_text"),
+    color_accent: color("color_accent"),
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from(SETTINGS_TABLE).upsert(record);
+  if (error) {
+    if (/portfolio_settings/.test(error.message)) {
+      return { error: "Falta crear la tabla de ajustes: corre supabase/ajustes.sql en el SQL Editor de Supabase." };
+    }
+    return { error: `No se pudo guardar: ${error.message}` };
+  }
+  revalidatePath("/", "layout");
+  return { ok: true };
 }

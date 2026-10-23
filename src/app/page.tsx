@@ -22,7 +22,7 @@ export default async function Home() {
     <>
       <header className="site-header">
         <a href="#inicio" className="brand">
-          <img src="/logo.png" alt="" />
+          <img src="/marca/logo" alt="" />
           <span className="mono" style={{ color: "var(--text)" }}>
             {site.name}
           </span>
@@ -41,7 +41,7 @@ export default async function Home() {
           <div className="stage">
             <div className="gridbg anim k-grid" aria-hidden="true" />
             <div className="hero-ring anim k-ring" aria-hidden="true" />
-            <img className="hero-logo anim k-logo" src="/logo.png" alt={`Logo de ${site.name}`} />
+            <img className="hero-logo anim k-logo" src="/marca/logo" alt={`Logo de ${site.name}`} />
             <div className="hero-copy">
               <h1 className="hero-title anim k-h1">Apps · Web · Diseño · Foto</h1>
               <p className="mono" style={{ margin: 0 }}>
@@ -129,7 +129,7 @@ export default async function Home() {
       </main>
 
       <footer className="site-footer">
-        <img src="/logo.png" alt={`Logo de ${site.name}`} />
+        <img src="/marca/logo" alt={`Logo de ${site.name}`} />
         <span className="mono">
           © {new Date().getFullYear()} {site.name}
         </span>

@@ -33,7 +33,7 @@ export default function LoginPage() {
   return (
     <main className="login">
       <form className="login-box" onSubmit={onSubmit}>
-        <img src="/logo.png" alt="Logo" style={{ width: 72, height: 72, borderRadius: "50%", boxShadow: "0 0 0 1px #2a2e35" }} />
+        <img src="/marca/logo" alt="Logo" style={{ width: 72, height: 72, borderRadius: "50%", boxShadow: "0 0 0 1px #2a2e35" }} />
         <h1 className="admin-title">Administrador</h1>
         {!isSupabaseConfigured && (
           <div className="notice">Supabase no está configurado todavía. Revisa el README.</div>

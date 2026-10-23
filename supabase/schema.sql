@@ -85,3 +85,5 @@ create policy "portfolio admins borran" on storage.objects
 
 -- 4. Agrega tu email como administrador (cámbialo por el tuyo):
 -- insert into public.portfolio_admins (email) values ('tu@email.com');
+
+-- Ajustes del sitio: ver supabase/ajustes.sql
