@@ -200,15 +200,15 @@ img { display: block; max-width: 100%; }
     0%, 35% { opacity: 0; letter-spacing: 0.6em; filter: blur(8px); }
     70%, 100% { opacity: 1; letter-spacing: -0.02em; filter: blur(0); }
   }
-  @keyframes kTxt { 0% { opacity: 0; transform: translateY(40px); } 25%, 100% { opacity: 1; transform: none; } }
-  @keyframes kPc { 0% { transform: translateY(70%) rotateX(60deg); opacity: 0; } 35%, 100% { transform: none; opacity: 1; } }
+  @keyframes kTxt { 0% { opacity: 0.3; transform: translateY(40px); } 20%, 100% { opacity: 1; transform: none; } }
+  @keyframes kPc { 0% { transform: translateY(45%) rotateX(50deg); opacity: 0.4; } 30%, 100% { transform: none; opacity: 1; } }
   @keyframes kPl {
-    0%, 30% { transform: translateX(0) scale(0.85); opacity: 0; }
-    65%, 100% { transform: translateX(-118%) rotateY(22deg) scale(0.9); opacity: 1; }
+    0%, 25% { transform: translateX(0) scale(0.85); opacity: 0; }
+    60%, 100% { transform: translateX(-118%) rotateY(22deg) scale(0.9); opacity: 1; }
   }
   @keyframes kPr {
-    0%, 30% { transform: translateX(0) scale(0.85); opacity: 0; }
-    65%, 100% { transform: translateX(118%) rotateY(-22deg) scale(0.9); opacity: 1; }
+    0%, 25% { transform: translateX(0) scale(0.85); opacity: 0; }
+    60%, 100% { transform: translateX(118%) rotateY(-22deg) scale(0.9); opacity: 1; }
   }
   @keyframes kFeed { 0%, 40% { transform: translateY(0); } 100% { transform: translateY(-45%); } }
   @keyframes kCount { from { transform: scaleX(0); } to { transform: scaleX(1); } }
