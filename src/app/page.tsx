@@ -15,8 +15,8 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
 
 export default async function Home() {
   const projects = await getPublishedProjects();
-  const apps = byCategory(projects, "app").slice(0, 6);
-  const webs = byCategory(projects, "web").slice(0, 3);
+  const apps = byCategory(projects, "app");
+  const webs = byCategory(projects, "web");
   const photos = byCategory(projects, "foto");
   const designs = byCategory(projects, "diseno");
   const settings = await getSettings();
