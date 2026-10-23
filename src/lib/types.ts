@@ -23,6 +23,7 @@ export type Project = {
   published: boolean;
   sort: number;
   template?: string | null;
+  scroll?: "vertical" | "horizontal" | null;
   created_at?: string;
 };
 

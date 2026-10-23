@@ -4,6 +4,7 @@
 
 -- Columna nueva para elegir la plantilla del proyecto (por si corriste schema.sql antes)
 alter table public.portfolio_projects add column if not exists template text;
+alter table public.portfolio_projects add column if not exists scroll text not null default 'vertical';
 
 delete from public.portfolio_projects where slug = 'marketplace-de-musica';
 

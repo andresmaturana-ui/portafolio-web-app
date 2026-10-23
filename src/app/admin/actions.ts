@@ -38,6 +38,7 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
     featured: formData.get("featured") === "on",
     published: formData.get("published") === "on",
     template: String(formData.get("template") ?? "") || null,
+    scroll: formData.get("scroll") === "horizontal" ? "horizontal" : "vertical",
     cover_url: images[0] ?? null,
     gallery: images.slice(1),
     updated_at: new Date().toISOString(),
@@ -46,9 +47,9 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   const write = (data: Partial<typeof record>) =>
     id ? supabase.from(TABLE).update(data).eq("id", id) : supabase.from(TABLE).insert(data);
   let { error } = await write(record);
-  // Base de datos sin la columna "template" (falta correr el SQL nuevo): guarda igual sin ella.
-  if (error && /template/.test(error.message)) {
-    const { template: _omit, ...rest } = record;
+  // Base de datos sin las columnas nuevas (falta correr el SQL nuevo): guarda igual sin ellas.
+  if (error && /template|scroll/.test(error.message)) {
+    const { template: _t, scroll: _s, ...rest } = record;
     ({ error } = await write(rest));
   }
 

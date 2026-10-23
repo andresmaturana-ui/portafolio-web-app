@@ -153,7 +153,15 @@ function AppScene({ project: p, index, id }: { project: Project; index: string; 
         </div>
         <Phone className="anim k-pl" image={left} alt={`${p.title}, pantalla 2`} accent />
         <Phone className="anim k-pr" image={right} alt={`${p.title}, pantalla 3`} />
-        <Phone className="anim k-pc" image={p.cover_url} feedClassName="anim k-feed" alt={`${p.title}, pantalla principal`} />
+        <Phone
+          className="anim k-pc"
+          image={p.cover_url}
+          feedClassName="anim k-feed"
+          scroll={p.scroll === "horizontal" ? "horizontal" : "vertical"}
+          screens={[p.cover_url, ...p.gallery].filter(Boolean) as string[]}
+          scrollClassName="anim k-shot"
+          alt={`${p.title}, pantalla principal`}
+        />
         <div className="progress-line anim k-count" aria-hidden="true" />
       </div>
     </section>

@@ -56,7 +56,15 @@ export function AppEscaparate({ p }: { p: Project }) {
         </div>
         <div className="tpl-hero-devices">
           {imgs[1] && <Phone className="phone--static tpl-phone-back" image={imgs[1]} alt={`${p.title}, pantalla 2`} />}
-          <Phone className="phone--static tpl-phone-front" image={imgs[0]} alt={`${p.title}, pantalla principal`} accent />
+          <Phone
+            className="phone--static tpl-phone-front"
+            image={imgs[0]}
+            alt={`${p.title}, pantalla principal`}
+            accent
+            scroll={p.scroll === "horizontal" ? "horizontal" : "vertical"}
+            screens={imgs}
+            scrollClassName="shot-root"
+          />
         </div>
       </section>
 
@@ -108,7 +116,7 @@ export function AppHistoria({ p }: { p: Project }) {
       {imgs.map((src, i) => (
         <section key={src + i} className={`tpl-story ${i % 2 ? "tpl-story--rev" : ""}`}>
           <div className="tpl-story-device rv">
-            <Phone className="phone--static" image={src} alt={`${p.title}, pantalla ${i + 1}`} />
+            <Phone className="phone--static" image={src} alt={`${p.title}, pantalla ${i + 1}`} scroll="vertical" scrollClassName="shot-view" />
           </div>
           <div className="tpl-story-copy rv">
             <span className="tpl-num">{pad2(i)}</span>

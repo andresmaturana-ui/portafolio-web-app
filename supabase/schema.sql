@@ -47,6 +47,7 @@ create table if not exists public.portfolio_projects (
 
 -- Plantilla de la página del proyecto (vacía = automática según la categoría)
 alter table public.portfolio_projects add column if not exists template text;
+alter table public.portfolio_projects add column if not exists scroll text not null default 'vertical';
 
 create index if not exists portfolio_projects_category_idx
   on public.portfolio_projects (category, sort);

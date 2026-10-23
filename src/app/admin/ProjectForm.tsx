@@ -23,6 +23,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const [uploadError, setUploadError] = useState("");
   const [urlDraft, setUrlDraft] = useState("");
   const [template, setTemplate] = useState(project?.template ?? "");
+  const [scroll, setScroll] = useState(project?.scroll ?? "vertical");
   const templates = TEMPLATES.filter((t) => t.for.includes(category));
   const autoLabel = TEMPLATES.find((t) => t.value === DEFAULT_TEMPLATE[category])?.label;
 
@@ -83,6 +84,24 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
           </select>
         </div>
       </div>
+
+      {category === "app" && (
+        <fieldset className="field templates">
+          <legend className="label">Scroll dentro del celular (portada)</legend>
+          <div className="template-options">
+            {[
+              { value: "vertical", label: "Vertical", hint: "La captura baja dentro del celular. Ideal con una captura larga de toda la pantalla." },
+              { value: "horizontal", label: "Horizontal", hint: "Las pantallas pasan de lado, como al deslizar entre ellas." },
+            ].map((o) => (
+              <label key={o.value} className={`template-option ${scroll === o.value ? "is-on" : ""}`}>
+                <input type="radio" name="scroll" value={o.value} checked={scroll === o.value} onChange={() => setScroll(o.value as "vertical" | "horizontal")} />
+                <strong>{o.label}</strong>
+                <span>{o.hint}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <fieldset className="field templates">
         <legend className="label">Plantilla de la página del proyecto</legend>

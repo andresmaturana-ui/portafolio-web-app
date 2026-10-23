@@ -1,13 +1,41 @@
 // Mockups de dispositivos. Sin imagen muestran una interfaz esquemática.
 
-type PhoneProps = { image?: string | null; className?: string; feedClassName?: string; alt?: string; accent?: boolean };
+type PhoneProps = {
+  image?: string | null;
+  className?: string;
+  feedClassName?: string;
+  alt?: string;
+  accent?: boolean;
+  /* Animación de la captura dentro del celular */
+  scroll?: "vertical" | "horizontal";
+  /* Pantallas que pasan de lado cuando scroll es horizontal */
+  screens?: string[];
+  scrollClassName?: string;
+};
 
-export function Phone({ image, className = "", feedClassName = "", alt = "", accent }: PhoneProps) {
+export function Phone({ image, className = "", feedClassName = "", alt = "", accent, scroll, screens = [], scrollClassName = "" }: PhoneProps) {
+  if (scroll === "horizontal" && screens.length > 1) {
+    const n = screens.length;
+    return (
+      <div className={`phone ${className}`}>
+        <div className="screen">
+          <div
+            className={`screen-strip shot-x ${scrollClassName}`}
+            style={{ width: `${n * 100}%`, ["--end" as string]: `${(-(n - 1) / n) * 100}%` }}
+          >
+            {screens.map((src, i) => (
+              <img key={src + i} src={src} alt={i === 0 ? alt : ""} style={{ width: `${100 / n}%` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`phone ${className}`}>
       <div className="screen">
         {image ? (
-          <img src={image} alt={alt} />
+          <img className={scroll === "vertical" ? `shot-y ${scrollClassName}` : ""} src={image} alt={alt} />
         ) : (
           <div className={`feed ${feedClassName}`} aria-hidden="true">
             <div className={`tile ${accent ? "tile--accent" : ""}`} style={{ height: 140 }} />
