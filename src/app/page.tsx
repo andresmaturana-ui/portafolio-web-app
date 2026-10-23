@@ -234,7 +234,7 @@ function WebScene({ project: p, index, id }: { project: Project; index: string; 
             </Link>
           </h2>
         </div>
-        <Browser className="anim k-br" siteClassName="anim k-site" image={p.cover_url} url={p.link} alt={`${p.title} en escritorio`} />
+        <Browser className="anim k-br" siteClassName="anim k-site" image={p.cover_url} url={p.link} title={p.title} alt={`${p.title} en escritorio`} />
         <Tablet className="anim k-tab" image={tablet} alt={`${p.title} en tablet`} />
         <Phone className="phone--small anim k-mob" image={mobile} alt={`${p.title} en móvil`} accent />
       </div>

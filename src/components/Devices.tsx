@@ -54,10 +54,11 @@ export function Phone({ image, className = "", feedClassName = "", alt = "", acc
   );
 }
 
-type BrowserProps = { image?: string | null; url?: string | null; className?: string; siteClassName?: string; alt?: string };
+type BrowserProps = { image?: string | null; url?: string | null; title?: string; className?: string; siteClassName?: string; alt?: string };
 
-export function Browser({ image, url, className = "", siteClassName = "", alt = "" }: BrowserProps) {
-  const host = url ? safeHost(url) : "[tusitio.cl]";
+export function Browser({ image, url, title, className = "", siteClassName = "", alt = "" }: BrowserProps) {
+  // Sin enlace en el proyecto, la barra muestra su nombre en vez de una dirección inventada.
+  const host = url ? safeHost(url) : (title ?? "");
   return (
     <div className={`browser ${className}`}>
       <div className="browser-bar">
@@ -108,8 +109,8 @@ export function Tablet({ image, className = "", alt = "" }: { image?: string | n
 
 function safeHost(url: string) {
   try {
-    return new URL(url).host;
+    return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).host.replace(/^www\./, "");
   } catch {
-    return url;
+    return url.replace(/^https?:\/\//i, "").replace(/^www\./, "").split("/")[0];
   }
 }

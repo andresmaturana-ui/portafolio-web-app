@@ -144,7 +144,7 @@ export function WebNavegador({ p }: { p: Project }) {
       </section>
       <section className="tpl-scroll-shot">
         <div className="tpl-scroll-stage">
-          <Browser className="tpl-browser" image={desktop} url={p.link} siteClassName="tpl-browser-site" alt={`${p.title} en escritorio`} />
+          <Browser className="tpl-browser" image={desktop} url={p.link} title={p.title} siteClassName="tpl-browser-site" alt={`${p.title} en escritorio`} />
         </div>
       </section>
       {(tablet || mobile) && (
