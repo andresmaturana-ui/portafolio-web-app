@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
-import { CATEGORIES, type Category, type Project } from "@/lib/types";
+import { CATEGORIES, DEFAULT_TEMPLATE, TEMPLATES, type Category, type Project } from "@/lib/types";
 import { saveProject, type FormState } from "./actions";
 
 const IMAGE_HINTS: Record<Category, string> = {
@@ -22,6 +22,9 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
   const [urlDraft, setUrlDraft] = useState("");
+  const [template, setTemplate] = useState(project?.template ?? "");
+  const templates = TEMPLATES.filter((t) => t.for.includes(category));
+  const autoLabel = TEMPLATES.find((t) => t.value === DEFAULT_TEMPLATE[category])?.label;
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -81,13 +84,31 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
         </div>
       </div>
 
+      <fieldset className="field templates">
+        <legend className="label">Plantilla de la página del proyecto</legend>
+        <div className="template-options">
+          <label className={`template-option ${template === "" ? "is-on" : ""}`}>
+            <input type="radio" name="template" value="" checked={template === ""} onChange={() => setTemplate("")} />
+            <strong>Automática</strong>
+            <span>{autoLabel}</span>
+          </label>
+          {templates.map((t) => (
+            <label key={t.value} className={`template-option ${template === t.value ? "is-on" : ""}`}>
+              <input type="radio" name="template" value={t.value} checked={template === t.value} onChange={() => setTemplate(t.value)} />
+              <strong>{t.label}</strong>
+              <span>{t.hint}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <div className="field">
         <label htmlFor="summary">Resumen (una línea)</label>
         <input className="input" id="summary" name="summary" defaultValue={project?.summary} />
       </div>
 
       <div className="field">
-        <label htmlFor="description">Descripción</label>
+        <label htmlFor="description">Descripción (cada línea se muestra como un punto o junto a una pantalla)</label>
         <textarea className="textarea" id="description" name="description" defaultValue={project?.description} />
       </div>
 

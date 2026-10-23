@@ -37,14 +37,20 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
     sort: Number(formData.get("sort") ?? 0) || 0,
     featured: formData.get("featured") === "on",
     published: formData.get("published") === "on",
+    template: String(formData.get("template") ?? "") || null,
     cover_url: images[0] ?? null,
     gallery: images.slice(1),
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = id
-    ? await supabase.from(TABLE).update(record).eq("id", id)
-    : await supabase.from(TABLE).insert(record);
+  const write = (data: Partial<typeof record>) =>
+    id ? supabase.from(TABLE).update(data).eq("id", id) : supabase.from(TABLE).insert(data);
+  let { error } = await write(record);
+  // Base de datos sin la columna "template" (falta correr el SQL nuevo): guarda igual sin ella.
+  if (error && /template/.test(error.message)) {
+    const { template: _omit, ...rest } = record;
+    ({ error } = await write(rest));
+  }
 
   if (error) {
     if (error.code === "23505") return { error: "Ya existe un proyecto con esa URL (slug). Cambia el slug." };

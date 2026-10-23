@@ -30,6 +30,8 @@ export const SAMPLE_PROJECTS: Project[] = [
     link: "https://kiltrazo.cl",
     cover_url: "/proyectos/kiltrazo-1.jpg",
     gallery: shots("kiltrazo", 5).slice(1),
+    template: "app-historia",
+    description: "App (PWA) para registrar mascotas gratis con un escaneo de la cara tipo Face ID.\nSi una mascota se pierde, quien la encuentra la escanea y se avisa al dueño, sin exponer sus datos.\nIncluye avisos de mascota perdida, mapa con cómo llegar, salud y vacunas, reencuentros y panel de administración.",
   }, 1),
   sample({
     slug: "senalizador",
@@ -38,7 +40,7 @@ export const SAMPLE_PROJECTS: Project[] = [
     summary: "El teléfono se vuelve la luz trasera de la bici: giros y freno controlados por voz.",
     link: "https://bikeligts.pages.dev",
     cover_url: "/proyectos/senalizador-1.jpg",
-    gallery: [...shots("senalizador", 3).slice(1), "/proyectos/senalizador-afiche.jpg"],
+    gallery: shots("senalizador", 3).slice(1),
   }, 2),
   sample({
     slug: "tagking",
@@ -48,6 +50,16 @@ export const SAMPLE_PROJECTS: Project[] = [
     cover_url: "/proyectos/tagking-1.jpg",
     gallery: shots("tagking", 5).slice(1),
   }, 3),
+  sample({
+    slug: "artist",
+    title: "ART?ST",
+    category: "app",
+    summary: "¿Quién es el artista? Arte callejero geolocalizado en la ciudad.",
+    cover_url: "/proyectos/artist-1.jpg",
+    gallery: ["/proyectos/artist-2.jpg", "/proyectos/artist-3.jpg"],
+    template: "app-historia",
+    description: "Murales, stencils y mosaicos a pantalla completa, uno a la vez, con mapa y cómo llegar.\nLos artistas pueden reclamar sus obras; incluye tiendas, galerías, exposiciones y publicidad según intereses.\nLaravel + Leaflet, instalable como app (PWA).",
+  }, 4),
   ...[1, 2, 3, 4, 5, 6].map((n) => sample({ slug: `foto-${n}`, title: `[Foto ${n}]`, category: "foto" }, 10 + n)),
 ];
 

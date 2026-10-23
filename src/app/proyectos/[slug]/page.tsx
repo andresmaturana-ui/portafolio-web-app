@@ -1,22 +1,34 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProjectBySlug } from "@/lib/projects";
-import { CATEGORIES } from "@/lib/types";
+import { templateFor } from "@/lib/types";
+import { AppEscaparate, AppHistoria, FotoGaleria, WebGaleria, WebNavegador } from "./templates";
 
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
-  return { title: project ? `${project.title} — Andrés Maturana` : "Proyecto" };
+  return {
+    title: project ? `${project.title} — Andrés Maturana` : "Proyecto",
+    description: project?.summary || undefined,
+    openGraph: project?.cover_url ? { images: [project.cover_url] } : undefined,
+  };
 }
+
+const TEMPLATE_COMPONENTS = {
+  "app-escaparate": AppEscaparate,
+  "app-historia": AppHistoria,
+  "web-navegador": WebNavegador,
+  "web-galeria": WebGaleria,
+  "foto-galeria": FotoGaleria,
+};
 
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const p = await getProjectBySlug(slug);
   if (!p) notFound();
-  const label = CATEGORIES.find((c) => c.value === p.category)?.label ?? p.category;
-  const images = [p.cover_url, ...p.gallery].filter(Boolean) as string[];
+  const Template = TEMPLATE_COMPONENTS[templateFor(p)];
 
   return (
     <>
@@ -25,27 +37,19 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           <img src="/logo.png" alt="" />
           <span className="mono" style={{ color: "var(--text)" }}>← Volver</span>
         </Link>
-      </header>
-      <article className="detail">
-        <p className="mono eyebrow">
-          {label}
-          {p.year ? ` · ${p.year}` : ""}
-          {p.client ? ` · ${p.client}` : ""}
-        </p>
-        <h1 className="h2" style={{ fontSize: "clamp(36px, 6vw, 80px)" }}>{p.title}</h1>
-        {p.summary && <p style={{ fontSize: 22, color: "var(--muted)", maxWidth: "60ch" }}>{p.summary}</p>}
-        {p.description && <p className="detail-desc">{p.description}</p>}
         {p.link && (
-          <a className="btn" href={p.link} target="_blank" rel="noreferrer" style={{ marginTop: 16 }}>
+          <a className="mono" href={p.link} target="_blank" rel="noreferrer">
             Ver en vivo ↗
           </a>
         )}
-        <div className="detail-gallery">
-          {images.map((src, i) => (
-            <img key={src + i} src={src} alt={`${p.title}, imagen ${i + 1}`} loading={i ? "lazy" : "eager"} />
-          ))}
-        </div>
+      </header>
+      <article className="tpl">
+        <Template p={p} />
       </article>
+      <footer className="site-footer">
+        <Link className="mono" href="/#contacto">¿Construimos algo? →</Link>
+        <img src="/logo.png" alt="Logo de Andrés Maturana" />
+      </footer>
     </>
   );
 }
