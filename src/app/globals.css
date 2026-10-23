@@ -76,10 +76,10 @@ img { display: block; max-width: 100%; }
   display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
 }
 .hero-pan, .hero-media { position: absolute; top: 0; left: 0; height: 100%; }
-.hero-pan { display: flex; gap: 4px; min-width: 135vw; width: max-content; }
+.hero-pan { display: flex; min-width: 135vw; width: max-content; }
 .hero-slide { position: relative; margin: 0; height: 100%; flex: 1 0 auto; }
 .hero-slide a { display: block; height: 100%; }
-.hero-slide img { height: 100%; width: auto; max-width: none; object-fit: cover; }
+.hero-slide img { height: 100%; width: auto; min-width: 100%; max-width: none; object-fit: cover; }
 .hero-slide figcaption {
   position: absolute; top: calc(var(--stage-h) * 0.12); left: 16px; z-index: 3; padding: 6px 12px; border-radius: 999px;
   color: var(--text); background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(8px);
