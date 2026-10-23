@@ -10,7 +10,7 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
 
 export default async function Home() {
   const projects = await getPublishedProjects();
-  const apps = byCategory(projects, "app").slice(0, 3);
+  const apps = byCategory(projects, "app").slice(0, 6);
   const webs = byCategory(projects, "web").slice(0, 3);
   const photos = byCategory(projects, "foto");
   const designs = byCategory(projects, "diseno");
@@ -30,7 +30,7 @@ export default async function Home() {
         <nav className="site-nav" aria-label="Secciones">
           {apps.length > 0 && <a className="mono" href="#apps">Apps</a>}
           {webs.length > 0 && <a className="mono hide-sm" href="#web">Web</a>}
-          {photos.length > 0 && <a className="mono hide-sm" href="#foto">Fotografía</a>}
+          <a className="mono" href="#foto">Fotografía</a>
           {designs.length > 0 && <a className="mono hide-sm" href="#diseno">Diseño</a>}
           <a className="mono" href="#contacto">Contacto</a>
         </nav>
@@ -58,6 +58,16 @@ export default async function Home() {
         {webs.map((p, i) => (
           <WebScene key={p.id} project={p} index={next()} id={i === 0 ? "web" : undefined} />
         ))}
+
+        {photos.length === 0 && (
+          <section id="foto" className="section">
+            <p className="mono eyebrow">{next()} — Fotografía</p>
+            <h2 className="h2">Mirada propia</h2>
+            <a className="btn" href={site.photoSite} style={{ marginTop: 32 }}>
+              Ver mis fotografías ↗
+            </a>
+          </section>
+        )}
 
         {photos.length > 0 && (
           <section id="foto" className="track" style={{ height: Math.max(1800, 900 + photos.length * 380) }}>
@@ -131,7 +141,7 @@ export default async function Home() {
 function AppScene({ project: p, index, id }: { project: Project; index: string; id?: string }) {
   const [left, right] = p.gallery;
   return (
-    <section id={id} className="track" style={{ height: 2600 }}>
+    <section id={id} className="track" style={{ height: 2300 }}>
       <div className="stage app-stage" style={{ perspective: 1200 }}>
         <div className="scene-copy anim k-txt">
           <p className="mono eyebrow">{index} — App</p>

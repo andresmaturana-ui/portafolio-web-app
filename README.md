@@ -16,7 +16,7 @@ y un administrador para subir proyectos.
 Todo usa el prefijo `portfolio_` y el bucket `portfolio`, así que no choca con otras tablas.
 
 1. Supabase → **SQL Editor** → pega y ejecuta [`supabase/schema.sql`](supabase/schema.sql).
-2. (Opcional) Ejecuta [`supabase/seed.sql`](supabase/seed.sql) para crear Melomaniac y el Marketplace de música.
+2. (Opcional) Ejecuta [`supabase/seed.sql`](supabase/seed.sql) para cargar Melomaniac, Kiltrazo, el Señalizador, TagKing, Skatespots y ART?ST.
 3. Agrega tu email como administrador:
    ```sql
    insert into public.portfolio_admins (email) values ('tu@email.com');

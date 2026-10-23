@@ -18,13 +18,37 @@ const sample = (p: Partial<Project> & Pick<Project, "slug" | "title" | "category
   ...p,
 });
 
+const shots = (name: string, n: number) => Array.from({ length: n }, (_, i) => `/proyectos/${name}-${i + 1}.jpg`);
+
 export const SAMPLE_PROJECTS: Project[] = [
-  sample({ slug: "melomaniac", title: "Melomaniac", category: "app", summary: "App para melómanos. [Qué hace, plataforma y tecnologías.]" }, 0),
-  sample({ slug: "marketplace-de-musica", title: "Marketplace de música", category: "web", summary: "Marketplace para comprar y vender música. [Detalle y resultado.]" }, 1),
+  sample({ slug: "melomaniac", title: "Melomaniac", category: "app", summary: "Marketplace de música para comprar y vender. [Detalle y tecnologías.]" }, 0),
+  sample({
+    slug: "kiltrazo",
+    title: "Kiltrazo",
+    category: "app",
+    summary: "Registro de mascotas con reconocimiento facial para que vuelvan a casa si se pierden.",
+    link: "https://kiltrazo.cl",
+    cover_url: "/proyectos/kiltrazo-1.jpg",
+    gallery: shots("kiltrazo", 5).slice(1),
+  }, 1),
+  sample({
+    slug: "senalizador",
+    title: "Señalizador para ciclistas",
+    category: "app",
+    summary: "El teléfono se vuelve la luz trasera de la bici: giros y freno controlados por voz.",
+    link: "https://bikeligts.pages.dev",
+    cover_url: "/proyectos/senalizador-1.jpg",
+    gallery: [...shots("senalizador", 3).slice(1), "/proyectos/senalizador-afiche.jpg"],
+  }, 2),
+  sample({
+    slug: "tagking",
+    title: "TagKing",
+    category: "app",
+    summary: "Tags y grafitis geolocalizados en la ciudad, con ranking de los más grafiteados.",
+    cover_url: "/proyectos/tagking-1.jpg",
+    gallery: shots("tagking", 5).slice(1),
+  }, 3),
   ...[1, 2, 3, 4, 5, 6].map((n) => sample({ slug: `foto-${n}`, title: `[Foto ${n}]`, category: "foto" }, 10 + n)),
-  sample({ slug: "marca-ejemplo", title: "[Proyecto de identidad]", category: "diseno", summary: "Marca" }, 20),
-  sample({ slug: "editorial-ejemplo", title: "[Pieza editorial]", category: "diseno", summary: "Editorial" }, 21),
-  sample({ slug: "packaging-ejemplo", title: "[Proyecto de packaging]", category: "diseno", summary: "Packaging" }, 22),
 ];
 
 export async function getPublishedProjects(): Promise<Project[]> {
