@@ -255,7 +255,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
             <span className="label">
               {s.hero_type === "video"
                 ? "MP4 corto (5 a 10 s), horizontal y de menos de 50 MB. Mientras más suave el movimiento de cámara, mejor se ve al hacer scroll."
-                : "Sube fotos o elígelas de tus proyectos: pasan una tras otra en este orden. A cada una le puedes poner nombre, cliente, año y enlace a su proyecto."}
+                : "Sube todas las fotos que quieras (puedes elegir varias a la vez) o tómalas de tus proyectos: pasan una tras otra en este orden. A cada una le puedes poner nombre, cliente, año y enlace a su proyecto."}
             </span>
             {heroError && <div className="notice notice--error" role="alert">{heroError}</div>}
             {!s.hero_media && <span className="label">Mientras no subas un archivo, la portada sigue mostrando el logo.</span>}

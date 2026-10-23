@@ -21,6 +21,8 @@ export default async function Home() {
   const settings = await getSettings();
   // Sin imagen o video subido, la portada vuelve al logo.
   const hero = settings.hero_media ? settings.hero_type : "logo";
+  // Con más fotos la portada dura más scroll, para que cada una alcance a verse.
+  const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : Math.max(2400, 1200 + heroSlides(settings).length * 450);
 
   let n = 0;
   const next = () => pad2(++n);
@@ -44,7 +46,7 @@ export default async function Home() {
       </header>
 
       <main>
-        <section id="inicio" className="track" style={{ height: hero === "logo" ? 1800 : 2400 }}>
+        <section id="inicio" className="track" style={{ height: heroHeight }}>
           <div className={`stage hero--${hero}`}>
             {hero === "logo" && (
               <>
