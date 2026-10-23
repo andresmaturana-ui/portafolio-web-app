@@ -77,7 +77,14 @@ img { display: block; max-width: 100%; }
 }
 .hero-pan, .hero-media { position: absolute; top: 0; left: 0; height: 100%; }
 .hero-pan { display: flex; gap: 4px; min-width: 135vw; width: max-content; }
-.hero-pan img { height: 100%; width: auto; max-width: none; flex: 1 0 auto; object-fit: cover; }
+.hero-slide { position: relative; margin: 0; height: 100%; flex: 1 0 auto; }
+.hero-slide a { display: block; height: 100%; }
+.hero-slide img { height: 100%; width: auto; max-width: none; object-fit: cover; }
+.hero-slide figcaption {
+  position: absolute; top: calc(var(--stage-h) * 0.12); left: 16px; z-index: 3; padding: 6px 12px; border-radius: 999px;
+  color: var(--text); background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(8px);
+}
+.hero-slide a:hover figcaption { color: var(--accent); }
 .hero-media { width: 100%; object-fit: cover; }
 .hero-shade {
   position: absolute; inset: 0; pointer-events: none;
@@ -474,3 +481,16 @@ img { display: block; max-width: 100%; }
 .settings-preview-p { margin: 0; color: var(--soft); font-size: 18px; }
 .hero-preview { position: relative; aspect-ratio: 16 / 7; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: var(--tile); }
 .hero-preview img, .hero-preview video { width: 100%; height: 100%; object-fit: cover; }
+.slide-list { display: grid; gap: 12px; }
+.slide-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+.slide-fields { display: grid; grid-template-columns: minmax(0, 2fr) 90px minmax(0, 2fr); gap: 8px; }
+.slide-actions { display: flex; gap: 6px; }
+.slide-actions .btn { min-height: 40px; padding: 6px 12px; }
+.slide-actions .btn:disabled { opacity: 0.35; cursor: default; }
+.thumb-pick { padding: 0; cursor: pointer; font: inherit; }
+.thumb-pick.is-on { opacity: 0.5; cursor: default; }
+@media (max-width: 760px) {
+  .slide-row { grid-template-columns: 72px minmax(0, 1fr); }
+  .slide-fields { grid-template-columns: minmax(0, 1fr); }
+  .slide-actions { grid-column: 1 / -1; }
+}

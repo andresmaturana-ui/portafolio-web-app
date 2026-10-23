@@ -3,7 +3,8 @@ import { DISPLAY_FONTS, MONO_FONTS } from "@/lib/settings";
 import { AdminHeader } from "../AdminHeader";
 import { requireUser } from "../guard";
 import { NotAdmin, NotConfigured } from "../Notices";
-import { SettingsForm } from "./SettingsForm";
+import { SettingsForm, type ProjectOption } from "./SettingsForm";
+import { TABLE } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,16 @@ const ALL_FONTS_HREF = `https://fonts.googleapis.com/css2?${[...DISPLAY_FONTS, .
 export default async function SettingsPage() {
   const { supabase, isAdmin, email, adminError } = await requireUser();
   const settings = await getSettings();
+  let projects: ProjectOption[] = [];
+  if (supabase && isAdmin) {
+    const { data } = await supabase.from(TABLE).select("slug,title,year,cover_url,gallery").order("sort").order("created_at", { ascending: false });
+    projects = (data ?? []).map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      year: p.year,
+      images: [p.cover_url, ...(p.gallery ?? [])].filter(Boolean) as string[],
+    }));
+  }
   return (
     <>
       <link rel="stylesheet" href={ALL_FONTS_HREF} />
@@ -25,7 +36,7 @@ export default async function SettingsPage() {
         </div>
         {!supabase && <NotConfigured />}
         {supabase && !isAdmin && <NotAdmin email={email} error={adminError} />}
-        {isAdmin && <SettingsForm initial={settings} />}
+        {isAdmin && <SettingsForm initial={settings} projects={projects} />}
       </main>
     </>
   );

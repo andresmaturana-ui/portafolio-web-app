@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
-import { heroImages } from "@/lib/settings";
+import { heroSlides } from "@/lib/settings";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
 import type { Project } from "@/lib/types";
@@ -53,10 +53,21 @@ export default async function Home() {
               </>
             )}
             {hero === "imagen" && (
-              <div className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"}`} aria-hidden="true">
-                {heroImages(settings).map((src, i) => (
-                  <img key={src + i} src={src} alt="" />
-                ))}
+              <div className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"}`}>
+                {heroSlides(settings).map((slide, i) => {
+                  const caption = [slide.title, slide.year].filter(Boolean).join(" · ");
+                  const body = (
+                    <>
+                      <img src={slide.src} alt={slide.title ?? ""} />
+                      {caption && <figcaption className="mono">{caption}{slide.slug && " →"}</figcaption>}
+                    </>
+                  );
+                  return (
+                    <figure key={slide.src + i} className="hero-slide">
+                      {slide.slug ? <Link href={`/proyectos/${slide.slug}`}>{body}</Link> : body}
+                    </figure>
+                  );
+                })}
               </div>
             )}
             {hero === "video" && <HeroVideo src={settings.hero_media!} />}

@@ -16,8 +16,25 @@ export type Settings = {
 export type HeroType = "logo" | "imagen" | "video";
 export type HeroDir = "ltr" | "rtl";
 
-// La portada panorámica guarda varias fotos en hero_media, una URL por línea.
-export const heroImages = (s: Pick<Settings, "hero_media">) => (s.hero_media ?? "").split("\n").map((u) => u.trim()).filter(Boolean);
+// Cada foto de la portada panorámica, con su pie opcional y el proyecto al que enlaza.
+export type HeroSlide = { src: string; title?: string; year?: string; slug?: string };
+
+// hero_media guarda las fotos como JSON; las primeras versiones usaban una URL por línea.
+export function heroSlides(s: Pick<Settings, "hero_media">): HeroSlide[] {
+  const raw = (s.hero_media ?? "").trim();
+  if (!raw) return [];
+  if (raw.startsWith("[")) {
+    try {
+      const list = JSON.parse(raw) as HeroSlide[];
+      return list.filter((x) => x && typeof x.src === "string" && x.src);
+    } catch {
+      return [];
+    }
+  }
+  return raw.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src);
+}
+
+export const serializeSlides = (list: HeroSlide[]) => (list.length ? JSON.stringify(list) : null);
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },

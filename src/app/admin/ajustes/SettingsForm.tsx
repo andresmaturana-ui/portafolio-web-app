@@ -1,7 +1,18 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { DEFAULT_SETTINGS, DISPLAY_FONTS, heroImages, HERO_TYPES, MONO_FONTS, PALETTES, settingsStyle, type Settings } from "@/lib/settings";
+import {
+  DEFAULT_SETTINGS,
+  DISPLAY_FONTS,
+  HERO_TYPES,
+  heroSlides,
+  MONO_FONTS,
+  PALETTES,
+  serializeSlides,
+  settingsStyle,
+  type HeroSlide,
+  type Settings,
+} from "@/lib/settings";
 import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { saveSettings, type SettingsState } from "../actions";
@@ -12,7 +23,9 @@ const COLORS: { name: "color_bg" | "color_text" | "color_accent"; label: string 
   { name: "color_text", label: "Texto" },
 ];
 
-export function SettingsForm({ initial }: { initial: Settings }) {
+export type ProjectOption = { slug: string; title: string; year: number | null; images: string[] };
+
+export function SettingsForm({ initial, projects }: { initial: Settings; projects: ProjectOption[] }) {
   const [state, formAction, saving] = useActionState<SettingsState, FormData>(saveSettings, {});
   const [s, setS] = useState<Settings>(initial);
   const [uploading, setUploading] = useState(false);
@@ -35,13 +48,27 @@ export function SettingsForm({ initial }: { initial: Settings }) {
     setUploading(false);
   }
 
-  const photos = heroImages(s);
-  const setPhotos = (list: string[]) => set("hero_media", list.join("\n") || null);
-  const movePhoto = (i: number, to: number) => {
-    const next = [...photos];
+  const slides = heroSlides(s);
+  const setSlides = (list: HeroSlide[]) => set("hero_media", serializeSlides(list));
+  const addSlides = (list: HeroSlide[]) => setS((prev) => ({ ...prev, hero_media: serializeSlides([...heroSlides(prev), ...list]) }));
+  const editSlide = (i: number, patch: Partial<HeroSlide>) => setSlides(slides.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const moveSlide = (i: number, to: number) => {
+    const next = [...slides];
     const [item] = next.splice(i, 1);
     next.splice(to, 0, item);
-    setPhotos(next);
+    setSlides(next);
+  };
+  const [picking, setPicking] = useState("");
+  const pickedProject = projects.find((p) => p.slug === picking);
+  // Al vincular un proyecto se completan nombre y año si estaban vacíos.
+  const linkProject = (i: number, slug: string) => {
+    const p = projects.find((x) => x.slug === slug);
+    const cur = slides[i];
+    editSlide(i, {
+      slug: slug || undefined,
+      title: cur.title || p?.title,
+      year: cur.year || (p?.year ? String(p.year) : undefined),
+    });
   };
 
   // Video: un archivo que reemplaza al anterior. Imagen: se suman fotos a la tira.
@@ -66,7 +93,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
     }
     if (urls.length) {
       if (isVideo) set("hero_media", urls[0]);
-      else setS((prev) => ({ ...prev, hero_media: [...heroImages(prev), ...urls].join("\n") }));
+      else addSlides(urls.map((src) => ({ src })));
     }
     setHeroUploading(false);
   }
@@ -120,24 +147,34 @@ export function SettingsForm({ initial }: { initial: Settings }) {
                 <video src={s.hero_media} muted playsInline autoPlay loop />
               </div>
             )}
-            {photos.length > 0 && s.hero_type === "imagen" && (
-              <div className="thumbs">
-                {photos.map((src, i) => (
-                  <div key={src + i} className="thumb">
-                    <img src={src} alt={`Foto ${i + 1}`} />
-                    <span className="thumb-badge">{i + 1}</span>
-                    <div className="thumb-actions">
-                      {i > 0 && (
-                        <button type="button" onClick={() => movePhoto(i, i - 1)} aria-label="Mover antes">
-                          ←
-                        </button>
-                      )}
-                      {i < photos.length - 1 && (
-                        <button type="button" onClick={() => movePhoto(i, i + 1)} aria-label="Mover después">
-                          →
-                        </button>
-                      )}
-                      <button type="button" onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label="Quitar foto">
+            {slides.length > 0 && s.hero_type === "imagen" && (
+              <div className="slide-list">
+                {slides.map((slide, i) => (
+                  <div key={slide.src + i} className="slide-row">
+                    <div className="thumb">
+                      <img src={slide.src} alt={`Foto ${i + 1}`} />
+                      <span className="thumb-badge">{i + 1}</span>
+                    </div>
+                    <div className="slide-fields">
+                      <input className="input" placeholder="Nombre (opcional)" aria-label={`Nombre de la foto ${i + 1}`} value={slide.title ?? ""} onChange={(e) => editSlide(i, { title: e.target.value || undefined })} />
+                      <input className="input" placeholder="Año" inputMode="numeric" aria-label={`Año de la foto ${i + 1}`} value={slide.year ?? ""} onChange={(e) => editSlide(i, { year: e.target.value || undefined })} />
+                      <select className="select" aria-label={`Proyecto de la foto ${i + 1}`} value={slide.slug ?? ""} onChange={(e) => linkProject(i, e.target.value)}>
+                        <option value="">Sin enlace a proyecto</option>
+                        {projects.map((p) => (
+                          <option key={p.slug} value={p.slug}>
+                            Enlaza a: {p.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="slide-actions">
+                      <button type="button" className="btn btn--ghost" disabled={i === 0} onClick={() => moveSlide(i, i - 1)} aria-label="Mover antes">
+                        ←
+                      </button>
+                      <button type="button" className="btn btn--ghost" disabled={i === slides.length - 1} onClick={() => moveSlide(i, i + 1)} aria-label="Mover después">
+                        →
+                      </button>
+                      <button type="button" className="btn btn--danger" onClick={() => setSlides(slides.filter((_, j) => j !== i))} aria-label="Quitar foto">
                         ✕
                       </button>
                     </div>
@@ -145,12 +182,46 @@ export function SettingsForm({ initial }: { initial: Settings }) {
                 ))}
               </div>
             )}
+            {s.hero_type === "imagen" && projects.length > 0 && (
+              <div className="field">
+                <label htmlFor="pick-project">Agregar una foto de un proyecto</label>
+                <select className="select" id="pick-project" value={picking} onChange={(e) => setPicking(e.target.value)}>
+                  <option value="">Elige un proyecto…</option>
+                  {projects.filter((p) => p.images.length).map((p) => (
+                    <option key={p.slug} value={p.slug}>
+                      {p.title}
+                    </option>
+                  ))}
+                </select>
+                {pickedProject && (
+                  <div className="thumbs">
+                    {pickedProject.images.map((src) => {
+                      const added = slides.some((x) => x.src === src);
+                      return (
+                        <button
+                          key={src}
+                          type="button"
+                          className={`thumb thumb-pick ${added ? "is-on" : ""}`}
+                          disabled={added}
+                          onClick={() =>
+                            addSlides([{ src, title: pickedProject.title, year: pickedProject.year ? String(pickedProject.year) : undefined, slug: pickedProject.slug }])
+                          }
+                        >
+                          <img src={src} alt="" />
+                          <span className="thumb-badge">{added ? "Agregada" : "+ Agregar"}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
             <label className="btn btn--ghost" style={{ cursor: "pointer", width: "fit-content" }}>
               {heroUploading
                 ? "Subiendo…"
                 : s.hero_type === "video"
                   ? s.hero_media ? "Cambiar video" : "Subir video"
-                  : photos.length ? "Agregar más fotos" : "Subir fotos"}
+                  : slides.length ? "Subir más fotos" : "Subir fotos"}
               <input
                 type="file"
                 multiple={s.hero_type === "imagen"}
@@ -162,7 +233,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
             <span className="label">
               {s.hero_type === "video"
                 ? "MP4 corto (5 a 10 s), horizontal y de menos de 50 MB. Mientras más suave el movimiento de cámara, mejor se ve al hacer scroll."
-                : "Sube una foto panorámica o varias fotos: pasan una tras otra en este orden. Usa las flechas para ordenarlas."}
+                : "Sube fotos o elígelas de tus proyectos: pasan una tras otra en este orden. A cada una le puedes poner nombre, año y enlace a su proyecto."}
             </span>
             {heroError && <div className="notice notice--error" role="alert">{heroError}</div>}
             {!s.hero_media && <span className="label">Mientras no subas un archivo, la portada sigue mostrando el logo.</span>}
