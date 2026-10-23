@@ -19,8 +19,8 @@ const sample = (p: Partial<Project> & Pick<Project, "slug" | "title" | "category
 });
 
 export const SAMPLE_PROJECTS: Project[] = [
-  sample({ slug: "app-ejemplo", title: "[Nombre de la app]", category: "app", summary: "[Qué resuelve la app, plataforma y tecnologías.]" }, 0),
-  sample({ slug: "web-ejemplo", title: "[Proyecto web]", category: "web", summary: "[Cliente, objetivo y resultado.]", link: "https://example.com" }, 1),
+  sample({ slug: "melomaniac", title: "Melomaniac", category: "app", summary: "App para melómanos. [Qué hace, plataforma y tecnologías.]" }, 0),
+  sample({ slug: "marketplace-de-musica", title: "Marketplace de música", category: "web", summary: "Marketplace para comprar y vender música. [Detalle y resultado.]" }, 1),
   ...[1, 2, 3, 4, 5, 6].map((n) => sample({ slug: `foto-${n}`, title: `[Foto ${n}]`, category: "foto" }, 10 + n)),
   sample({ slug: "marca-ejemplo", title: "[Proyecto de identidad]", category: "diseno", summary: "Marca" }, 20),
   sample({ slug: "editorial-ejemplo", title: "[Pieza editorial]", category: "diseno", summary: "Editorial" }, 21),

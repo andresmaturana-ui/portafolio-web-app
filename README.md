@@ -16,11 +16,12 @@ y un administrador para subir proyectos.
 Todo usa el prefijo `portfolio_` y el bucket `portfolio`, así que no choca con otras tablas.
 
 1. Supabase → **SQL Editor** → pega y ejecuta [`supabase/schema.sql`](supabase/schema.sql).
-2. Agrega tu email como administrador:
+2. (Opcional) Ejecuta [`supabase/seed.sql`](supabase/seed.sql) para crear Melomaniac y el Marketplace de música.
+3. Agrega tu email como administrador:
    ```sql
    insert into public.portfolio_admins (email) values ('tu@email.com');
    ```
-3. **Authentication → Users → Add user**: crea tu usuario con ese email y una contraseña.
+4. **Authentication → Users → Add user**: crea tu usuario con ese email y una contraseña.
    Solo los emails de `portfolio_admins` pueden crear, editar o borrar proyectos y subir imágenes.
 
 ### 2. Variables de entorno
