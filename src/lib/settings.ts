@@ -16,9 +16,12 @@ export type Settings = {
 export type HeroType = "logo" | "imagen" | "video";
 export type HeroDir = "ltr" | "rtl";
 
+// La portada panorámica guarda varias fotos en hero_media, una URL por línea.
+export const heroImages = (s: Pick<Settings, "hero_media">) => (s.hero_media ?? "").split("\n").map((u) => u.trim()).filter(Boolean);
+
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },
-  { value: "imagen", label: "Imagen panorámica", hint: "Una foto ancha se desplaza de lado con el scroll." },
+  { value: "imagen", label: "Imagen panorámica", hint: "Una o varias fotos pasan de lado con el scroll." },
   { value: "video", label: "Video", hint: "El video avanza al bajar y retrocede al subir." },
 ];
 

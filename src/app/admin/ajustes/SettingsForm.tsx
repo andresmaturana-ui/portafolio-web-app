@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { DEFAULT_SETTINGS, DISPLAY_FONTS, HERO_TYPES, MONO_FONTS, PALETTES, settingsStyle, type Settings } from "@/lib/settings";
+import { DEFAULT_SETTINGS, DISPLAY_FONTS, heroImages, HERO_TYPES, MONO_FONTS, PALETTES, settingsStyle, type Settings } from "@/lib/settings";
 import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { saveSettings, type SettingsState } from "../actions";
@@ -35,21 +35,39 @@ export function SettingsForm({ initial }: { initial: Settings }) {
     setUploading(false);
   }
 
+  const photos = heroImages(s);
+  const setPhotos = (list: string[]) => set("hero_media", list.join("\n") || null);
+  const movePhoto = (i: number, to: number) => {
+    const next = [...photos];
+    const [item] = next.splice(i, 1);
+    next.splice(to, 0, item);
+    setPhotos(next);
+  };
+
+  // Video: un archivo que reemplaza al anterior. Imagen: se suman fotos a la tira.
   async function onHeroMedia(files: FileList | null) {
-    const file = files?.[0];
-    if (!file) return;
+    if (!files?.length) return;
     setHeroError("");
-    if (file.size > 50 * 1024 * 1024) {
-      setHeroError("El archivo pesa más de 50 MB. Comprímelo un poco y vuelve a intentarlo.");
+    const isVideo = s.hero_type === "video";
+    const list = isVideo ? [files[0]] : Array.from(files);
+    if (list.some((f) => f.size > 50 * 1024 * 1024)) {
+      setHeroError("Hay un archivo de más de 50 MB. Comprímelo un poco y vuelve a intentarlo.");
       return;
     }
     setHeroUploading(true);
     const supabase = createClient();
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-    const path = `marca/portada-${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from(BUCKET).upload(path, file, { cacheControl: "31536000", contentType: file.type });
-    if (error) setHeroError(`No se pudo subir: ${error.message}`);
-    else set("hero_media", supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
+    const urls: string[] = [];
+    for (const file of list) {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+      const path = `marca/portada-${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from(BUCKET).upload(path, file, { cacheControl: "31536000", contentType: file.type });
+      if (error) setHeroError(`No se pudo subir ${file.name}: ${error.message}`);
+      else urls.push(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
+    }
+    if (urls.length) {
+      if (isVideo) set("hero_media", urls[0]);
+      else setS((prev) => ({ ...prev, hero_media: [...heroImages(prev), ...urls].join("\n") }));
+    }
     setHeroUploading(false);
   }
 
@@ -97,15 +115,45 @@ export function SettingsForm({ initial }: { initial: Settings }) {
         </div>
         {s.hero_type !== "logo" && (
           <div className="field">
-            {s.hero_media && (
+            {s.hero_media && s.hero_type === "video" && (
               <div className="hero-preview">
-                {s.hero_type === "video" ? <video src={s.hero_media} muted playsInline autoPlay loop /> : <img src={s.hero_media} alt="Portada" />}
+                <video src={s.hero_media} muted playsInline autoPlay loop />
+              </div>
+            )}
+            {photos.length > 0 && s.hero_type === "imagen" && (
+              <div className="thumbs">
+                {photos.map((src, i) => (
+                  <div key={src + i} className="thumb">
+                    <img src={src} alt={`Foto ${i + 1}`} />
+                    <span className="thumb-badge">{i + 1}</span>
+                    <div className="thumb-actions">
+                      {i > 0 && (
+                        <button type="button" onClick={() => movePhoto(i, i - 1)} aria-label="Mover antes">
+                          ←
+                        </button>
+                      )}
+                      {i < photos.length - 1 && (
+                        <button type="button" onClick={() => movePhoto(i, i + 1)} aria-label="Mover después">
+                          →
+                        </button>
+                      )}
+                      <button type="button" onClick={() => setPhotos(photos.filter((_, j) => j !== i))} aria-label="Quitar foto">
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
             <label className="btn btn--ghost" style={{ cursor: "pointer", width: "fit-content" }}>
-              {heroUploading ? "Subiendo…" : s.hero_media ? "Cambiar archivo" : s.hero_type === "video" ? "Subir video" : "Subir imagen"}
+              {heroUploading
+                ? "Subiendo…"
+                : s.hero_type === "video"
+                  ? s.hero_media ? "Cambiar video" : "Subir video"
+                  : photos.length ? "Agregar más fotos" : "Subir fotos"}
               <input
                 type="file"
+                multiple={s.hero_type === "imagen"}
                 accept={s.hero_type === "video" ? "video/mp4,video/webm,video/quicktime" : "image/png,image/jpeg,image/webp"}
                 hidden
                 onChange={(e) => onHeroMedia(e.target.files)}
@@ -114,7 +162,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
             <span className="label">
               {s.hero_type === "video"
                 ? "MP4 corto (5 a 10 s), horizontal y de menos de 50 MB. Mientras más suave el movimiento de cámara, mejor se ve al hacer scroll."
-                : "Foto bien ancha (panorámica), por ejemplo 3000 × 1200 px. Mientras más ancha, más recorrido tiene."}
+                : "Sube una foto panorámica o varias fotos: pasan una tras otra en este orden. Usa las flechas para ordenarlas."}
             </span>
             {heroError && <div className="notice notice--error" role="alert">{heroError}</div>}
             {!s.hero_media && <span className="label">Mientras no subas un archivo, la portada sigue mostrando el logo.</span>}

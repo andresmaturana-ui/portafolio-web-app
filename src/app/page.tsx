@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
+import { heroImages } from "@/lib/settings";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
 import type { Project } from "@/lib/types";
@@ -52,11 +53,11 @@ export default async function Home() {
               </>
             )}
             {hero === "imagen" && (
-              <img
-                className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"}`}
-                src={settings.hero_media!}
-                alt=""
-              />
+              <div className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"}`} aria-hidden="true">
+                {heroImages(settings).map((src, i) => (
+                  <img key={src + i} src={src} alt="" />
+                ))}
+              </div>
             )}
             {hero === "video" && <HeroVideo src={settings.hero_media!} />}
             {hero !== "logo" && <div className="hero-shade" aria-hidden="true" />}
