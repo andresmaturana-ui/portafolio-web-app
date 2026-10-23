@@ -8,8 +8,16 @@ create table if not exists public.portfolio_settings (
   color_bg text,
   color_text text,
   color_accent text,
+  hero_type text,
+  hero_media text,
+  hero_dir text,
   updated_at timestamptz not null default now()
 );
+
+-- Portada (por si la tabla se creó antes de que existieran estas columnas).
+alter table public.portfolio_settings add column if not exists hero_type text;
+alter table public.portfolio_settings add column if not exists hero_media text;
+alter table public.portfolio_settings add column if not exists hero_dir text;
 
 alter table public.portfolio_settings enable row level security;
 

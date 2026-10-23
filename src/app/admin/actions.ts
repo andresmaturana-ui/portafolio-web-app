@@ -98,10 +98,16 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
     color_bg: color("color_bg"),
     color_text: color("color_text"),
     color_accent: color("color_accent"),
+    hero_type: pick("hero_type", ["logo", "imagen", "video"], "logo"),
+    hero_media: String(formData.get("hero_media") ?? "").trim() || null,
+    hero_dir: pick("hero_dir", ["ltr", "rtl"], "ltr"),
     updated_at: new Date().toISOString(),
   };
   const { error } = await supabase.from(SETTINGS_TABLE).upsert(record);
   if (error) {
+    if (/hero_/.test(error.message)) {
+      return { error: "Falta actualizar la tabla de ajustes: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase." };
+    }
     if (/portfolio_settings/.test(error.message)) {
       return { error: "Falta crear la tabla de ajustes: corre supabase/ajustes.sql en el SQL Editor de Supabase." };
     }

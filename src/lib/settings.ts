@@ -8,7 +8,19 @@ export type Settings = {
   color_bg: string;
   color_text: string;
   color_accent: string;
+  hero_type: HeroType;
+  hero_media: string | null;
+  hero_dir: HeroDir;
 };
+
+export type HeroType = "logo" | "imagen" | "video";
+export type HeroDir = "ltr" | "rtl";
+
+export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
+  { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },
+  { value: "imagen", label: "Imagen panorámica", hint: "Una foto ancha se desplaza de lado con el scroll." },
+  { value: "video", label: "Video", hint: "El video avanza al bajar y retrocede al subir." },
+];
 
 export const DEFAULT_SETTINGS: Settings = {
   logo_url: null,
@@ -17,6 +29,9 @@ export const DEFAULT_SETTINGS: Settings = {
   color_bg: "#07080a",
   color_text: "#e9ecef",
   color_accent: "#c8ff3d",
+  hero_type: "logo",
+  hero_media: null,
+  hero_dir: "ltr",
 };
 
 // Tipografías de Google Fonts que se ofrecen en el admin.

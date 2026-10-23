@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Browser, Phone, Tablet } from "@/components/Devices";
+import { HeroVideo } from "@/components/HeroVideo";
+import { getSettings } from "@/lib/get-settings";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
 import type { Project } from "@/lib/types";
@@ -14,6 +16,9 @@ export default async function Home() {
   const webs = byCategory(projects, "web").slice(0, 3);
   const photos = byCategory(projects, "foto");
   const designs = byCategory(projects, "diseno");
+  const settings = await getSettings();
+  // Sin imagen o video subido, la portada vuelve al logo.
+  const hero = settings.hero_media ? settings.hero_type : "logo";
 
   let n = 0;
   const next = () => pad2(++n);
@@ -37,13 +42,26 @@ export default async function Home() {
       </header>
 
       <main>
-        <section id="inicio" className="track" style={{ height: 1800 }}>
-          <div className="stage">
-            <div className="gridbg anim k-grid" aria-hidden="true" />
-            <div className="hero-ring anim k-ring" aria-hidden="true" />
-            <img className="hero-logo anim k-logo" src="/marca/logo" alt={`Logo de ${site.name}`} />
+        <section id="inicio" className="track" style={{ height: hero === "logo" ? 1800 : 2400 }}>
+          <div className={`stage hero--${hero}`}>
+            {hero === "logo" && (
+              <>
+                <div className="gridbg anim k-grid" aria-hidden="true" />
+                <div className="hero-ring anim k-ring" aria-hidden="true" />
+                <img className="hero-logo anim k-logo" src="/marca/logo" alt={`Logo de ${site.name}`} />
+              </>
+            )}
+            {hero === "imagen" && (
+              <img
+                className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"}`}
+                src={settings.hero_media!}
+                alt=""
+              />
+            )}
+            {hero === "video" && <HeroVideo src={settings.hero_media!} />}
+            {hero !== "logo" && <div className="hero-shade" aria-hidden="true" />}
             <div className="hero-copy">
-              <h1 className="hero-title anim k-h1">Apps · Web · Diseño · Foto</h1>
+              <h1 className={`hero-title anim ${hero === "logo" ? "k-h1" : "k-h1-media"}`}>Apps · Web · Diseño · Foto</h1>
               <p className="mono" style={{ margin: 0 }}>
                 Portafolio {new Date().getFullYear()} — haz scroll ↓
               </p>
