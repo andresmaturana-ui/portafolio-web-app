@@ -19,22 +19,49 @@ export type HeroDir = "ltr" | "rtl";
 // Cada foto de la portada panorámica, con su pie opcional y el proyecto al que enlaza.
 export type HeroSlide = { src: string; title?: string; client?: string; year?: string; slug?: string };
 
-// hero_media guarda las fotos como JSON; las primeras versiones usaban una URL por línea.
-export function heroSlides(s: Pick<Settings, "hero_media">): HeroSlide[] {
-  const raw = (s.hero_media ?? "").trim();
-  if (!raw) return [];
-  if (raw.startsWith("[")) {
+// Color de las fotos panorámicas: original, blanco y negro, monocromo de un color o con un velo de color.
+export type HeroFilter = "none" | "bn" | "mono" | "tinte";
+export type HeroLook = { filter: HeroFilter; tint: string; amount: number };
+export const DEFAULT_LOOK: HeroLook = { filter: "none", tint: "#c8ff3d", amount: 35 };
+
+export const HERO_FILTERS: { value: HeroFilter; label: string; hint: string }[] = [
+  { value: "none", label: "Original", hint: "Las fotos con sus colores." },
+  { value: "bn", label: "Blanco y negro", hint: "Todas en escala de grises." },
+  { value: "mono", label: "Monocromo", hint: "Todas teñidas de un solo color." },
+  { value: "tinte", label: "Velo de color", hint: "Sus colores, con una capa de color encima." },
+];
+
+type HeroData = { slides: HeroSlide[]; look: HeroLook };
+
+// hero_media guarda JSON: { slides, look }. Versiones anteriores: un arreglo de fotos o una URL por línea.
+function parseHero(raw: string | null): HeroData {
+  const text = (raw ?? "").trim();
+  const clean = (list: unknown): HeroSlide[] =>
+    Array.isArray(list) ? list.filter((x) => x && typeof x.src === "string" && x.src) : [];
+  if (!text) return { slides: [], look: DEFAULT_LOOK };
+  if (text.startsWith("[") || text.startsWith("{")) {
     try {
-      const list = JSON.parse(raw) as HeroSlide[];
-      return list.filter((x) => x && typeof x.src === "string" && x.src);
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK };
+      const look = data.look ?? {};
+      return {
+        slides: clean(data.slides),
+        look: {
+          filter: HERO_FILTERS.some((f) => f.value === look.filter) ? look.filter : "none",
+          tint: isHex(look.tint) ? look.tint : DEFAULT_LOOK.tint,
+          amount: Math.min(100, Math.max(0, Number(look.amount) || DEFAULT_LOOK.amount)),
+        },
+      };
     } catch {
-      return [];
+      return { slides: [], look: DEFAULT_LOOK };
     }
   }
-  return raw.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src);
+  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK };
 }
 
-export const serializeSlides = (list: HeroSlide[]) => (list.length ? JSON.stringify(list) : null);
+export const heroSlides = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).slides;
+export const heroLook = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).look;
+export const serializeHero = (slides: HeroSlide[], look: HeroLook) => (slides.length ? JSON.stringify({ slides, look }) : null);
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },

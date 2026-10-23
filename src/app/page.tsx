@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
-import { heroSlides } from "@/lib/settings";
+import { heroLook, heroSlides } from "@/lib/settings";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
 import type { Project } from "@/lib/types";
@@ -53,7 +53,10 @@ export default async function Home() {
               </>
             )}
             {hero === "imagen" && (
-              <div className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"}`}>
+              <div
+                className={`hero-pan anim ${settings.hero_dir === "rtl" ? "k-pan-rtl" : "k-pan-ltr"} look-${heroLook(settings).filter}`}
+                style={{ "--tint": heroLook(settings).tint, "--amount": heroLook(settings).amount / 100 } as React.CSSProperties}
+              >
                 {heroSlides(settings).map((slide, i) => {
                   const caption = [slide.title, slide.client, slide.year].filter(Boolean).join(" · ");
                   const body = (

@@ -5,11 +5,14 @@ import {
   DEFAULT_SETTINGS,
   DISPLAY_FONTS,
   HERO_TYPES,
+  HERO_FILTERS,
+  heroLook,
   heroSlides,
   MONO_FONTS,
   PALETTES,
-  serializeSlides,
+  serializeHero,
   settingsStyle,
+  type HeroLook,
   type HeroSlide,
   type Settings,
 } from "@/lib/settings";
@@ -49,8 +52,10 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
   }
 
   const slides = heroSlides(s);
-  const setSlides = (list: HeroSlide[]) => set("hero_media", serializeSlides(list));
-  const addSlides = (list: HeroSlide[]) => setS((prev) => ({ ...prev, hero_media: serializeSlides([...heroSlides(prev), ...list]) }));
+  const look = heroLook(s);
+  const setSlides = (list: HeroSlide[]) => set("hero_media", serializeHero(list, look));
+  const addSlides = (list: HeroSlide[]) => setS((prev) => ({ ...prev, hero_media: serializeHero([...heroSlides(prev), ...list], heroLook(prev)) }));
+  const setLook = (patch: Partial<HeroLook>) => set("hero_media", serializeHero(slides, { ...look, ...patch }));
   const editSlide = (i: number, patch: Partial<HeroSlide>) => setSlides(slides.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const moveSlide = (i: number, to: number) => {
     const next = [...slides];
@@ -253,6 +258,44 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                   <input type="radio" name="hero_dir" value={o.value} checked={s.hero_dir === o.value} onChange={() => set("hero_dir", o.value as Settings["hero_dir"])} />
                   <strong>{o.label}</strong>
                 </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+        {s.hero_type === "imagen" && slides.length > 0 && (
+          <fieldset className="field templates">
+            <legend className="label" style={{ marginBottom: 8 }}>Color de las fotos</legend>
+            <div className="template-options">
+              {HERO_FILTERS.map((f) => (
+                <label key={f.value} className={`template-option ${look.filter === f.value ? "is-on" : ""}`}>
+                  <input type="radio" name="hero_filter" value={f.value} checked={look.filter === f.value} onChange={() => setLook({ filter: f.value })} />
+                  <strong>{f.label}</strong>
+                  <span>{f.hint}</span>
+                </label>
+              ))}
+            </div>
+            {(look.filter === "mono" || look.filter === "tinte") && (
+              <div className="form-grid" style={{ marginTop: 12 }}>
+                <div className="field">
+                  <label htmlFor="hero_tint">Color</label>
+                  <div className="color-field">
+                    <input type="color" id="hero_tint" value={look.tint} onChange={(e) => setLook({ tint: e.target.value })} />
+                    <button type="button" className="btn btn--ghost" onClick={() => setLook({ tint: s.color_accent })}>
+                      Usar el acento
+                    </button>
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="hero_amount">Intensidad: {look.amount} %</label>
+                  <input id="hero_amount" type="range" min={10} max={100} step={5} value={look.amount} onChange={(e) => setLook({ amount: Number(e.target.value) })} style={{ accentColor: "var(--accent)", minHeight: 44 }} />
+                </div>
+              </div>
+            )}
+            <div className={`hero-look-preview hero-pan look-${look.filter}`} style={{ "--tint": look.tint, "--amount": look.amount / 100 } as React.CSSProperties}>
+              {slides.slice(0, 4).map((slide, i) => (
+                <figure key={slide.src + i} className="hero-slide">
+                  <img src={slide.src} alt="" />
+                </figure>
               ))}
             </div>
           </fieldset>

@@ -85,6 +85,13 @@ img { display: block; max-width: 100%; }
   color: var(--text); background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(8px);
 }
 .hero-slide a:hover figcaption { color: var(--accent); }
+/* Color de las fotos panorámicas (se elige en /admin/ajustes) */
+.hero-slide::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: var(--tint); opacity: 0; }
+.look-bn .hero-slide img { filter: grayscale(1) contrast(1.08); }
+.look-mono .hero-slide img { filter: grayscale(1) contrast(1.1); }
+.look-mono .hero-slide::after { mix-blend-mode: color; opacity: var(--amount); }
+.look-tinte .hero-slide::after { mix-blend-mode: soft-light; opacity: var(--amount); }
+.hero-look-preview { position: relative; height: 160px; margin-top: 12px; min-width: 0; width: 100%; overflow: hidden; border-radius: 12px; }
 .hero-media { width: 100%; object-fit: cover; }
 .hero-shade {
   position: absolute; inset: 0; pointer-events: none;
@@ -93,6 +100,8 @@ img { display: block; max-width: 100%; }
 .hero--imagen .hero-copy, .hero--video .hero-copy { z-index: 2; }
 .hero-title { margin: 0; font-size: clamp(36px, 7vw, 104px); font-weight: 700; letter-spacing: -0.02em; line-height: 0.95; }
 .scene-copy { position: absolute; top: 12%; left: var(--pad); max-width: 380px; z-index: 5; }
+/* En escritorio el texto de las apps no puede pasar del borde del celular izquierdo (≈ 30 % del ancho). */
+.app-stage .scene-copy { max-width: clamp(200px, calc(29vw - var(--pad) - 16px), 340px); }
 .scene-sum { margin: 12px 0 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
 .scene-copy a { display: inline-block; margin-top: 16px; }
 .scene-copy--center { left: 0; right: 0; max-width: none; text-align: center; top: 9%; padding: 0 16px; }
@@ -329,7 +338,7 @@ img { display: block; max-width: 100%; }
 .login-box { width: min(400px, 100%); display: grid; gap: 20px; }
 
 /* En escritorio el grupo de celulares se corre a la derecha para dejar espacio al texto */
-@media (min-width: 1000px) {
+@media (min-width: 761px) {
   .app-stage .phone { margin-left: 18vw; }
 }
 @media (max-width: 720px) {
