@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Browser, Phone } from "@/components/Devices";
-import { createLiquid, liquidSupported, type LiquidShot } from "@/components/liquid";
+import { createLiquid, liquidSupported } from "@/components/liquid";
 import type { HeroFx } from "@/lib/settings";
 
 export type HeroItem = {
@@ -151,22 +151,131 @@ function HeroFlow({ items, spin }: { items: HeroItem[]; spin: boolean }) {
   );
 }
 
-// Tamaño del marco de cada tipo, en px, centrado como las tarjetas del carrusel.
-function frameRect(kind: HeroItem["kind"], W: number, H: number): [number, number, number, number] {
+// Escena de la portada líquida: cada proyecto ocupa todo el ancho. Apps: tres celulares con distintas
+// pantallas. Webs: escritorio, tablet y celular. Diseño: tres afiches. Se dibuja en un lienzo 2D y luego se derrite en WebGL.
+type Device = "phone" | "tablet" | "desktop" | "poster";
+type Frame = { device: Device; cx: number; cy: number; w: number; h: number; rot: number; src: string; focus: [number, number] };
+
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+
+function sceneFrames(it: HeroItem, W: number, H: number, t: number): Frame[] {
   const mobile = W < 760;
-  let w: number;
-  let h: number;
-  if (kind === "app") {
-    h = Math.min(H * 0.56, 600);
-    w = h * (9 / 19.5);
-  } else if (kind === "web") {
-    w = mobile ? W * 0.84 : Math.min(W * 0.46, 680);
-    h = w / 1.6;
-  } else {
-    h = Math.min(H * (mobile ? 0.5 : 0.56), 560);
-    w = h * 0.75;
+  const shots = it.screens?.length ? it.screens : [it.src];
+  const pick = (k: number) => shots[k] ?? shots[0];
+  const cy = H * (mobile ? 0.42 : 0.45);
+  if (it.kind === "web") {
+    // Escritorio al centro, tablet a la derecha y celular a la izquierda, un poco delante.
+    const dw = mobile ? W * 0.86 : Math.min(W * 0.56, 900, H * 0.62 * 1.6);
+    const dh = dw * 0.625;
+    const dx = mobile ? W / 2 : W * 0.47;
+    const dy = mobile ? H * 0.34 : cy - dh * 0.06;
+    const th = mobile ? dh * 1.05 : dh * 0.88;
+    const ph = mobile ? dh * 0.95 : dh * 0.85;
+    const focus: [number, number] = [0.5, t];
+    return [
+      { device: "desktop", cx: dx, cy: dy, w: dw, h: dh, rot: 0, src: pick(0), focus },
+      { device: "tablet", cx: mobile ? W * 0.72 : dx + dw / 2 + th * 0.15, cy: dy + dh * (mobile ? 0.62 : 0.14), w: th * 0.75, h: th, rot: 0, src: pick(0), focus },
+      { device: "phone", cx: mobile ? W * 0.24 : dx - dw / 2 - ph * 0.02, cy: dy + dh * (mobile ? 0.7 : 0.22), w: ph * (9 / 19.5), h: ph, rot: 0, src: pick(0), focus },
+    ];
   }
-  return [W / 2, H * 0.44, w / 2, h / 2];
+  // Apps y diseño: tres piezas, la del centro adelante y las de los lados un poco giradas.
+  const poster = it.kind === "diseno";
+  const h = poster ? Math.min(H * (mobile ? 0.36 : 0.52), 540) : Math.min(H * (mobile ? 0.5 : 0.62), 660);
+  const w = poster ? h * 0.75 : h * (9 / 19.5);
+  const gap = mobile ? W * 0.33 : Math.min(W * 0.27, w * 2.1);
+  const horizontal = it.kind === "app" && it.scroll === "horizontal";
+  // Con una sola captura, cada celular muestra otra parte: si es horizontal, pantallas seguidas; si es vertical, otra altura.
+  const focus = (k: number): [number, number] =>
+    poster ? [0.5, 0.5] : horizontal ? [clamp01(t * 0.4 + k * 0.3), 0.5] : shots[k] ? [0.5, t] : [0.5, clamp01(t * 0.5 + (k === 1 ? 0.5 : 0.25))];
+  const side = mobile ? 0.8 : 0.9;
+  return [
+    { device: poster ? "poster" : "phone", cx: W / 2 - gap, cy: cy + h * 0.04, w: w * side, h: h * side, rot: -0.07, src: pick(1), focus: focus(1) },
+    { device: poster ? "poster" : "phone", cx: W / 2 + gap, cy: cy + h * 0.04, w: w * side, h: h * side, rot: 0.07, src: pick(2), focus: focus(2) },
+    { device: poster ? "poster" : "phone", cx: W / 2, cy, w, h, rot: 0, src: pick(0), focus: horizontal ? focus(0) : [0.5, t] },
+  ];
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number | number[]) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+}
+
+// La captura «cubre» la pantalla (object-fit: cover) en la parte que indica focus.
+function cover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number, focus: [number, number]) {
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
+  const fa = w / h;
+  let sx = 0;
+  let sy = 0;
+  let sw = iw;
+  let sh = ih;
+  if (iw / ih > fa) {
+    sw = ih * fa;
+    sx = (iw - sw) * focus[0];
+  } else {
+    sh = iw / fa;
+    sy = (ih - sh) * focus[1];
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+function drawFrame(ctx: CanvasRenderingContext2D, f: Frame, img: HTMLImageElement | null) {
+  const { w, h } = f;
+  ctx.save();
+  ctx.translate(f.cx, f.cy);
+  ctx.rotate(f.rot);
+  const x = -w / 2;
+  const y = -h / 2;
+  const outer = f.device === "phone" ? w * 0.16 : f.device === "tablet" ? w * 0.07 : f.device === "desktop" ? 10 : 6;
+  // Cuerpo del aparato con sombra.
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = 50;
+  ctx.shadowOffsetY = 24;
+  ctx.fillStyle = f.device === "desktop" ? "#16181c" : "#0c0d10";
+  roundRect(ctx, x, y, w, h, outer);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "rgba(255,255,255,0.14)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Pantalla.
+  let sx = x;
+  let sy = y;
+  let sw = w;
+  let sh = h;
+  let r = outer;
+  if (f.device === "phone" || f.device === "tablet") {
+    const pad = w * (f.device === "phone" ? 0.04 : 0.035);
+    sx += pad;
+    sy += pad;
+    sw -= pad * 2;
+    sh -= pad * 2;
+    r = Math.max(2, outer - pad);
+  } else if (f.device === "desktop") {
+    const bar = Math.max(18, h * 0.06);
+    ctx.fillStyle = "#3a3d44";
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.arc(x + 16 + i * 14, y + bar / 2, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    sy += bar;
+    sh -= bar;
+    r = 0;
+  }
+  ctx.save();
+  roundRect(ctx, sx, sy, sw, sh, f.device === "desktop" ? [0, 0, outer, outer] : r);
+  ctx.clip();
+  ctx.fillStyle = "#111";
+  ctx.fillRect(sx, sy, sw, sh);
+  if (img) cover(ctx, img, sx, sy, sw, sh, f.focus);
+  ctx.restore();
+  if (f.device === "phone") {
+    ctx.fillStyle = "#000";
+    roundRect(ctx, -w * 0.14, sy + w * 0.03, w * 0.28, w * 0.065, w * 0.04);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 // Líquida: las pantallas pasan solas (cada una queda unos segundos mientras corre su captura y luego se
@@ -197,28 +306,48 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
     const liquid = gfx;
     const n = items.length;
     // Las capturas se cargan con CORS para poder dibujarlas en WebGL.
-    const imgs = items.map(() => null as HTMLImageElement | null);
+    const imgs = new Map<string, HTMLImageElement>();
+    const getImg = (src: string) => {
+      let img = imgs.get(src);
+      if (!img) {
+        img = new Image();
+        img.crossOrigin = "anonymous";
+        img.decoding = "async";
+        img.src = src;
+        imgs.set(src, img);
+      }
+      return img;
+    };
+    const loaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
+    // Lista para mostrar: todas sus capturas cargaron (o fallaron).
+    const ready = (i: number) => [items[i].src, ...(items[i].screens ?? [])].every((src) => getImg(src).complete);
     const load = (i: number) => {
       i = ((i % n) + n) % n;
-      if (imgs[i]) return;
-      imgs[i] = new Image();
-      const img = imgs[i]!;
-      img.crossOrigin = "anonymous";
-      img.decoding = "async";
-      img.onerror = () => onFail();
-      img.src = items[i].src;
+      ready(i);
     };
-    const ready = (i: number) => {
-      const img = imgs[i];
-      return img && img.complete && img.naturalWidth ? img : null;
-    };
-    const shot = (i: number, t: number): LiquidShot | null => {
-      const img = ready(i);
-      if (!img) return null;
+    // Dos lienzos 2D con la escena de cada lado de la transición; solo se redibujan si algo cambió.
+    const slots = [0, 1].map(() => ({ canvas: document.createElement("canvas"), key: "" }));
+    const scene = (slot: 0 | 1, i: number, t: number) => {
       const it = items[i];
-      // La captura corre dentro del marco igual que en las secciones: hacia abajo, o de lado si el proyecto es horizontal.
-      const focus: [number, number] = it.kind === "diseno" ? [0.5, 0.5] : it.kind === "app" && it.scroll === "horizontal" ? [t, 0.5] : [0.5, t];
-      return { img, rect: frameRect(it.kind, cv.clientWidth, cv.clientHeight), focus };
+      const { width, height, dpr } = liquid.size();
+      const W = cv.clientWidth;
+      const H = cv.clientHeight;
+      const frames = sceneFrames(it, W, H, Math.round(t * 500) / 500);
+      const imgsFor = frames.map((f) => getImg(f.src));
+      const key = `${i}|${frames.map((f) => f.focus.join(",")).join(";")}|${width}x${height}|${imgsFor.filter(loaded).length}`;
+      const s = slots[slot];
+      if (s.key === key) return null;
+      s.key = key;
+      if (s.canvas.width !== width || s.canvas.height !== height) {
+        s.canvas.width = width;
+        s.canvas.height = height;
+      }
+      const ctx = s.canvas.getContext("2d")!;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      frames.forEach((f, k) => drawFrame(ctx, f, loaded(imgsFor[k]) ? imgsFor[k] : null));
+      return s.canvas;
     };
 
     // Reloj propio: solo avanza mientras la portada se ve y la imagen siguiente ya cargó.
@@ -288,16 +417,12 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
       mouse[0] += (target[0] - mouse[0]) * 0.18;
       mouse[1] += (target[1] - mouse[1]) * 0.18;
       hover *= 0.965;
-      const a = shot(index, tA);
-      const b = shot(next, tB) ?? a;
-      if (a && b) {
-        try {
-          liquid.draw(a, b, mix, now / 1000, mouse, hover);
-        } catch {
-          dead = true;
-          onFail();
-          return;
-        }
+      try {
+        liquid.draw(scene(0, index, tA), scene(1, next, tB), mix, now / 1000, mouse, hover);
+      } catch {
+        dead = true;
+        onFail();
+        return;
       }
       if (visible && !document.hidden) frame = requestAnimationFrame(render);
     };
@@ -365,6 +490,7 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
     const onTouch = (e: TouchEvent) => e.touches[0] && point(e.touches[0].clientX, e.touches[0].clientY);
     const onResize = () => {
       liquid.resize();
+      slots.forEach((x) => (x.key = ""));
       start();
     };
     el.addEventListener("pointermove", onPointer);
