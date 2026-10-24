@@ -647,3 +647,14 @@ img { display: block; max-width: 100%; }
 
 /* Texto solo para buscadores y lectores de pantalla */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+/* Captura de escritorio más larga que la pantalla: formato 16:10 y baja sola con el scroll de la página */
+@supports (animation-timeline: view()) {
+  /* La línea de tiempo va en el contenedor: dentro del navegador (overflow: hidden) se mediría contra él y no contra la página */
+  .fit-browser.is-tall { view-timeline-name: --fit; }
+  .fit-browser.is-tall .browser-body { aspect-ratio: 16 / 10; max-height: none; overflow: hidden; }
+  .fit-browser.is-tall .tpl-browser-site { height: 100%; }
+  .fit-browser.is-tall .browser-body .site-shot {
+    height: 100%; object-fit: cover; object-position: 50% 0%;
+    animation: kShot linear both; animation-timeline: --fit; animation-range: cover 25% cover 75%;
+  }
+}

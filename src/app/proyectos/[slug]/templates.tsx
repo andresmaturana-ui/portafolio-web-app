@@ -1,4 +1,5 @@
 import { Browser, Phone, Tablet } from "@/components/Devices";
+import { FitBrowser } from "@/components/FitBrowser";
 import { CATEGORIES, type Project } from "@/lib/types";
 
 const pad2 = (n: number) => String(n + 1).padStart(2, "0");
@@ -44,13 +45,13 @@ function Ecosistema({ p }: { p: Project }) {
       <p className="mono eyebrow">Ecosistema</p>
       <h2 className="tpl-eco-title">En el celular y en el escritorio</h2>
       <div className="tpl-eco rv">
-        <Browser className="tpl-eco-browser" siteClassName="tpl-browser-site" image={desk[0]} url={p.link} title={p.title} alt={`${p.title} en escritorio`} />
+        <FitBrowser image={desk[0]} url={p.link} title={p.title} alt={`${p.title} en escritorio`} />
         {phone[0] && <Phone className="phone--static tpl-eco-phone" image={phone[0]} alt={`${p.title} en el celular`} />}
       </div>
       {desk.length > 1 && (
         <div className="tpl-eco-more">
           {desk.slice(1).map((src, i) => (
-            <Browser key={src + i} className="tpl-eco-browser rv" siteClassName="tpl-browser-site" image={src} url={p.link} title={p.title} alt={`${p.title} en escritorio, pantalla ${i + 2}`} />
+            <FitBrowser key={src + i} className="rv" image={src} url={p.link} title={p.title} alt={`${p.title} en escritorio, pantalla ${i + 2}`} />
           ))}
         </div>
       )}
