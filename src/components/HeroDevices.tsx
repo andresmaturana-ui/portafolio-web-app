@@ -169,6 +169,11 @@ function frameRect(kind: HeroItem["kind"], W: number, H: number): [number, numbe
   return [W / 2, H * 0.44, w / 2, h / 2];
 }
 
+// Líquida: las pantallas pasan solas (cada una queda unos segundos mientras corre su captura y luego se
+// derrite en la siguiente). Al pasar el dedo o el mouse se distorsiona alrededor del puntero.
+const LIQUID_HOLD = 3.6;
+const LIQUID_MOVE = 1.3;
+
 function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: number; onFail: () => void }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -177,11 +182,10 @@ function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: 
   useEffect(() => {
     const el = root.current;
     const cv = canvas.current;
-    const track = el?.closest(".track") as HTMLElement | null;
-    if (!el || !cv || !track || !items.length) return;
+    if (!el || !cv || !items.length) return;
     let gfx: ReturnType<typeof createLiquid> = null;
     try {
-      gfx = createLiquid(cv, strength, getComputedStyle(el).getPropertyValue("--accent") || "#c8ff3d");
+      gfx = createLiquid(cv, strength);
     } catch {
       gfx = null;
     }
@@ -190,71 +194,117 @@ function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: 
       return;
     }
     const liquid = gfx;
+    const n = items.length;
     // Las capturas se cargan con CORS para poder dibujarlas en WebGL.
     const imgs = items.map(() => null as HTMLImageElement | null);
     const load = (i: number) => {
-      if (i < 0 || i >= items.length || imgs[i]) return;
-      const img = new Image();
+      i = ((i % n) + n) % n;
+      if (imgs[i]) return;
+      imgs[i] = new Image();
+      const img = imgs[i]!;
       img.crossOrigin = "anonymous";
       img.decoding = "async";
-      img.onload = () => {
-        imgs[i] = img;
-        schedule();
-      };
       img.onerror = () => onFail();
       img.src = items[i].src;
     };
-    let frame = 0;
-    let dead = false;
-    const shot = (i: number, t: number): LiquidShot | null => {
+    const ready = (i: number) => {
       const img = imgs[i];
+      return img && img.complete && img.naturalWidth ? img : null;
+    };
+    const shot = (i: number, t: number): LiquidShot | null => {
+      const img = ready(i);
       if (!img) return null;
       const it = items[i];
-      const W = cv.clientWidth;
-      const H = cv.clientHeight;
       // La captura corre dentro del marco igual que en las secciones: hacia abajo, o de lado si el proyecto es horizontal.
       const focus: [number, number] = it.kind === "diseno" ? [0.5, 0.5] : it.kind === "app" && it.scroll === "horizontal" ? [t, 0.5] : [0.5, t];
-      return { img, rect: frameRect(it.kind, W, H), focus };
+      return { img, rect: frameRect(it.kind, cv.clientWidth, cv.clientHeight), focus };
     };
+
+    // Reloj propio: solo avanza mientras la portada se ve y la imagen siguiente ya cargó.
+    let index = 0;
+    let clock = 0;
+    let last = 0;
+    let visible = true;
+    let frame = 0;
+    let dead = false;
+    const mouse: [number, number] = [-9999, -9999];
+    const target: [number, number] = [-9999, -9999];
+    let hover = 0;
+
     const render = (now: number) => {
       frame = 0;
       if (dead) return;
-      const { p, f, screenT } = heroProgress(track, items.length);
-      const k = Math.floor(f);
-      const mix = f - k;
-      [k - 1, k, k + 1, k + 2].forEach(load);
-      const a = shot(k, screenT(k));
-      const b = shot(Math.min(k + 1, items.length - 1), screenT(k + 1)) ?? a;
+      const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+      last = now;
+      const next = (index + 1) % n;
+      load(index);
+      load(next);
+      load(index + 2);
+      if (n > 1 && ready(index) && ready(next)) clock += dt;
+      if (clock >= LIQUID_HOLD + LIQUID_MOVE) {
+        clock -= LIQUID_HOLD + LIQUID_MOVE;
+        index = next;
+        setCurrent(index);
+      }
+      const x = Math.max(0, (clock - LIQUID_HOLD) / LIQUID_MOVE);
+      const mix = x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+      const t = Math.min(1, clock / LIQUID_HOLD);
+      mouse[0] += (target[0] - mouse[0]) * 0.18;
+      mouse[1] += (target[1] - mouse[1]) * 0.18;
+      hover *= 0.965;
+      const a = shot(index, t);
+      const b = shot((index + 1) % n, 0) ?? a;
       if (a && b) {
         try {
-          liquid.draw(a, b, mix, now / 1000);
+          liquid.draw(a, b, mix, now / 1000, mouse, hover);
         } catch {
           dead = true;
           onFail();
           return;
         }
       }
-      el.style.setProperty("--p", p.toFixed(4));
-      el.style.setProperty("--m", (mix === 0 ? 0 : Math.sin(mix * Math.PI)).toFixed(3));
-      setCurrent(Math.round(f));
-      // Mientras se derrite, el líquido sigue moviéndose aunque no se haga scroll.
-      if (mix > 0 && mix < 1) schedule();
+      if (visible && !document.hidden) frame = requestAnimationFrame(render);
     };
-    const schedule = () => {
+    const start = () => {
+      last = 0;
       if (!frame) frame = requestAnimationFrame(render);
     };
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) start();
+    });
+    io.observe(el);
+    const onVisibility = () => !document.hidden && visible && start();
+    const point = (x: number, y: number) => {
+      const r = cv.getBoundingClientRect();
+      // La primera vez el puntero aparece donde está, sin cruzar la pantalla.
+      if (hover < 0.01) {
+        mouse[0] = x - r.left;
+        mouse[1] = y - r.top;
+      }
+      target[0] = x - r.left;
+      target[1] = y - r.top;
+      hover = 1;
+    };
+    const onPointer = (e: PointerEvent) => point(e.clientX, e.clientY);
+    const onTouch = (e: TouchEvent) => e.touches[0] && point(e.touches[0].clientX, e.touches[0].clientY);
     const onResize = () => {
       liquid.resize();
-      schedule();
+      start();
     };
-    load(0);
-    load(1);
-    schedule();
-    window.addEventListener("scroll", schedule, { passive: true });
+    el.addEventListener("pointermove", onPointer);
+    el.addEventListener("pointerdown", onPointer);
+    el.addEventListener("touchmove", onTouch, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("resize", onResize);
+    start();
     return () => {
       dead = true;
-      window.removeEventListener("scroll", schedule);
+      io.disconnect();
+      el.removeEventListener("pointermove", onPointer);
+      el.removeEventListener("pointerdown", onPointer);
+      el.removeEventListener("touchmove", onTouch);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(frame);
     };
@@ -266,11 +316,6 @@ function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: 
   return (
     <div ref={root} className="hero-devices hero-devices--liquid">
       <div className="gridbg anim k-grid" aria-hidden="true" />
-      <div className="hd-fx" aria-hidden="true">
-        <div className="hd-halo" />
-        <div className="hd-streak hd-streak--1" />
-        <div className="hd-streak hd-streak--3" />
-      </div>
       <canvas ref={canvas} className="hd-liquid" aria-hidden="true" />
       {active && <Link href={`/proyectos/${active.slug}`} className="hd-hit" aria-label={active.title} />}
       <Caption item={active} index={current} total={items.length} />

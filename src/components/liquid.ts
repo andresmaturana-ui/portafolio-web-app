@@ -1,9 +1,10 @@
 // Transición líquida de ART?ST adaptada a la portada: la pantalla de un proyecto se «derrite» en la del
 // siguiente (ruido + separación RGB + colores girando). Cada pantalla se dibuja dentro de su marco
-// (celular, navegador o póster) con un borde de neón, y el marco también se deforma al pasar.
+// (celular, navegador o póster) y el marco también se deforma al pasar. Al pasar el dedo o el mouse,
+// la pantalla se distorsiona alrededor del puntero.
 const VS = "attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;uv.y=1.-uv.y;gl_Position=vec4(p,0,1);}";
 const FS = `precision highp float;varying vec2 uv;
-uniform sampler2D t0,t1;uniform float prog,time,strength,rad;uniform vec2 res,a0,a1,o0,o1;uniform vec4 r0,r1;uniform vec3 accent;
+uniform sampler2D t0,t1;uniform float prog,time,strength,rad,hover;uniform vec2 res,a0,a1,o0,o1,mouse;uniform vec4 r0,r1;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p*=2.;a*=.5;}return v;}
@@ -13,20 +14,21 @@ vec4 samp(sampler2D t,vec2 u,vec4 R,vec2 r,vec2 o,float ab){
  vec2 q=abs(u-R.xy)*res-R.zw*res+rad;float sd=length(max(q,0.))+min(max(q.x,q.y),0.)-rad;
  vec2 c=(l-.5)*r+.5+(o-.5)*(1.-r);
  vec3 col=vec3(texture2D(t,c+vec2(ab,0)).r,texture2D(t,c).g,texture2D(t,c-vec2(ab,0)).b);
- float inside=1.-smoothstep(-1.,1.,sd);
- float glow=exp(-abs(sd)/2.5)*.9+exp(-max(sd,0.)/36.)*.22;
- return vec4(mix(accent,col,inside),max(inside,glow));}
+ return vec4(col,1.-smoothstep(-1.,1.,sd));}
 void main(){
  float w=sin(prog*3.14159);
  vec2 q=uv*3.;float f=fbm(q+vec2(time*.25,-time*.2)+fbm(q*1.7-time*.15));
  vec2 d=vec2(cos(f*6.2831),sin(f*6.2831))*(f-.3)*strength*w;
  float edge=smoothstep(prog-.18,prog+.18,f*.9+uv.y*.1+.05);
- float ab=.025*w*strength/.35;
- vec4 c0=samp(t0,uv+d*prog,r0,a0,o0,ab);
- vec4 c1=samp(t1,uv-d*(1.-prog),r1,a1,o1,ab);
+ vec2 pm=(uv-mouse)*vec2(res.x/res.y,1.);
+ float m=hover*exp(-dot(pm,pm)/.012);
+ vec2 dm=vec2(cos(f*6.2831),sin(f*6.2831))*.05*m-pm*.35*m;
+ float ab=.025*w*strength/.35+.012*m;
+ vec4 c0=samp(t0,uv+d*prog+dm,r0,a0,o0,ab);
+ vec4 c1=samp(t1,uv-d*(1.-prog)+dm,r1,a1,o1,ab);
  vec4 c=mix(c1,c0,edge);
  float s=min(1.,strength/.35);
- c.rgb=hue(c.rgb,w*f*5.*s);
+ c.rgb=hue(c.rgb,w*f*5.*s+m*f*2.);
  c.rgb=mix(c.rgb,c.rgb*1.2+vec3(.06,0,.1)*w,w*s);
  gl_FragColor=c;}`;
 
@@ -38,12 +40,6 @@ export type LiquidShot = {
   focus: [number, number];
 };
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  const v = m ? parseInt(m[1], 16) : 0xc8ff3d;
-  return [((v >> 16) & 255) / 255, ((v >> 8) & 255) / 255, (v & 255) / 255];
-};
-
 export function liquidSupported() {
   if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return false;
   try {
@@ -53,7 +49,7 @@ export function liquidSupported() {
   }
 }
 
-export function createLiquid(canvas: HTMLCanvasElement, strength: number, accent: string) {
+export function createLiquid(canvas: HTMLCanvasElement, strength: number) {
   const gl = canvas.getContext("webgl", { premultipliedAlpha: false, alpha: true });
   if (!gl) return null;
   const sh = (type: number, src: string) => {
@@ -74,7 +70,7 @@ export function createLiquid(canvas: HTMLCanvasElement, strength: number, accent
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U: Record<string, WebGLUniformLocation | null> = {};
-  ["t0", "t1", "prog", "time", "strength", "rad", "res", "a0", "a1", "o0", "o1", "r0", "r1", "accent"].forEach((k) => {
+  ["t0", "t1", "prog", "time", "strength", "rad", "hover", "res", "mouse", "a0", "a1", "o0", "o1", "r0", "r1"].forEach((k) => {
     U[k] = gl.getUniformLocation(prog, k);
   });
   [0, 1].forEach((unit) => {
@@ -87,7 +83,6 @@ export function createLiquid(canvas: HTMLCanvasElement, strength: number, accent
   gl.uniform1i(U.t0, 0);
   gl.uniform1i(U.t1, 1);
   gl.uniform1f(U.strength, strength);
-  gl.uniform3fv(U.accent, hexToRgb(accent));
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -121,9 +116,12 @@ export function createLiquid(canvas: HTMLCanvasElement, strength: number, accent
     gl.uniform2fv(unit ? U.o1 : U.o0, shot.focus);
   };
 
-  const draw = (a: LiquidShot, b: LiquidShot, p: number, time: number) => {
+  // mouse: posición del puntero en px dentro del lienzo; hover: 0 (quieto) → 1 (moviéndose).
+  const draw = (a: LiquidShot, b: LiquidShot, p: number, time: number, mouse: [number, number], hover: number) => {
     use(0, a);
     use(1, b);
+    gl.uniform2f(U.mouse, mouse[0] / (canvas.clientWidth || 1), mouse[1] / (canvas.clientHeight || 1));
+    gl.uniform1f(U.hover, hover);
     gl.uniform1f(U.prog, p);
     gl.uniform1f(U.time, time);
     gl.clearColor(0, 0, 0, 0);

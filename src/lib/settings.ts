@@ -68,7 +68,7 @@ export type HeroFx = "giro" | "carrusel" | "liquida" | "liquida-fuerte";
 export const HERO_FXS: { value: HeroFx; label: string; hint: string }[] = [
   { value: "giro", label: "Giro con luces", hint: "Cada pieza da una vuelta completa al pasar, con luces y líneas de neón." },
   { value: "carrusel", label: "Carrusel 3D", hint: "Pasan de lado en 3D, sin girar ni luces: más sobrio." },
-  { value: "liquida", label: "Líquida suave", hint: "Como en ART?ST: una pantalla se derrite en la siguiente con el scroll." },
+  { value: "liquida", label: "Líquida suave", hint: "Como en ART?ST: las pantallas pasan solas y se derriten una en la otra. Se distorsionan al pasar el dedo o el mouse." },
   { value: "liquida-fuerte", label: "Líquida psicodélica", hint: "La misma, pero con más distorsión y colores girando." },
 ];
 
