@@ -98,7 +98,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
     color_bg: color("color_bg"),
     color_text: color("color_text"),
     color_accent: color("color_accent"),
-    hero_type: pick("hero_type", ["logo", "imagen", "video"], "logo"),
+    hero_type: pick("hero_type", ["logo", "dispositivos", "imagen", "video"], "logo"),
     hero_media: String(formData.get("hero_media") ?? "").trim() || null,
     hero_dir: pick("hero_dir", ["ltr", "rtl"], "ltr"),
     contact_email: String(formData.get("contact_email") ?? "").trim() || null,

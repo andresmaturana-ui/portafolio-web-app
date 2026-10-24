@@ -45,7 +45,7 @@ export const parseHiddenSections = (raw: unknown): SectionId[] =>
 export const serializeSections = (order: SectionId[], hidden: SectionId[]) =>
   order.map((id) => (hidden.includes(id) ? `!${id}` : id)).join(",");
 
-export type HeroType = "logo" | "imagen" | "video";
+export type HeroType = "logo" | "dispositivos" | "imagen" | "video";
 export type HeroDir = "ltr" | "rtl";
 
 // Cada foto de la portada panorámica, con su pie opcional y el proyecto al que enlaza.
@@ -97,6 +97,7 @@ export const serializeHero = (slides: HeroSlide[], look: HeroLook) => (slides.le
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },
+  { value: "dispositivos", label: "Web · App · Diseño · Foto", hint: "Un navegador, un celular, un afiche y una foto de tus proyectos se arman con el scroll." },
   { value: "imagen", label: "Imagen panorámica", hint: "Una o varias fotos pasan de lado con el scroll." },
   { value: "video", label: "Video", hint: "El video avanza al bajar y retrocede al subir." },
 ];

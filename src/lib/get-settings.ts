@@ -17,7 +17,7 @@ export async function getSettings(): Promise<Settings> {
       color_bg: isHex(data.color_bg) ? data.color_bg : DEFAULT_SETTINGS.color_bg,
       color_text: isHex(data.color_text) ? data.color_text : DEFAULT_SETTINGS.color_text,
       color_accent: isHex(data.color_accent) ? data.color_accent : DEFAULT_SETTINGS.color_accent,
-      hero_type: data.hero_type === "imagen" || data.hero_type === "video" ? data.hero_type : "logo",
+      hero_type: ["dispositivos", "imagen", "video"].includes(data.hero_type) ? data.hero_type : "logo",
       hero_media: data.hero_media || null,
       hero_dir: data.hero_dir === "rtl" ? "rtl" : "ltr",
       contact_email: data.contact_email || null,

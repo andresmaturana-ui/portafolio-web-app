@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { Browser, Phone, Tablet } from "@/components/Devices";
+import { HeroDevices } from "@/components/HeroDevices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
 import { heroLook, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
@@ -21,10 +22,13 @@ export default async function Home() {
   const designs = byCategory(projects, "diseno");
   const settings = await getSettings();
   // Sin imagen o video subido, la portada vuelve al logo.
-  const hero = settings.hero_media ? settings.hero_type : "logo";
+  const hero =
+    settings.hero_type === "dispositivos" ? "dispositivos" : settings.hero_media && settings.hero_type !== "logo" ? settings.hero_type : "logo";
   // Con más fotos la portada dura más scroll, para que cada una alcance a verse.
-  const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : Math.max(2400, 1200 + heroSlides(settings).length * 450);
+  const heroHeight = hero === "logo" ? 1800 : hero === "video" || hero === "dispositivos" ? 2400 : Math.max(2400, 1200 + heroSlides(settings).length * 450);
 
+  // Para la portada Web · App · Diseño · Foto: el primer proyecto de cada tipo que tenga imagen.
+  const heroWeb = webs.find((p) => p.cover_url) ?? webs[0];
   const visibleSections = settings.section_order.filter((id) => !settings.sections_hidden.includes(id));
 
   let n = 0;
@@ -156,9 +160,17 @@ export default async function Home() {
               </div>
             )}
             {hero === "video" && <HeroVideo src={settings.hero_media!} />}
-            {hero !== "logo" && <div className="hero-shade" aria-hidden="true" />}
+            {hero === "dispositivos" && (
+              <HeroDevices
+                web={heroWeb && { image: heroWeb.cover_url, url: heroWeb.link, title: heroWeb.title }}
+                app={apps.find((p) => p.cover_url)?.cover_url}
+                design={designs.find((p) => p.cover_url)?.cover_url}
+                photo={heroSlides(settings)[0]?.src ?? photos.find((p) => p.cover_url)?.cover_url}
+              />
+            )}
+            {(hero === "imagen" || hero === "video") && <div className="hero-shade" aria-hidden="true" />}
             <div className="hero-copy">
-              <h1 className={`hero-title anim ${hero === "logo" ? "k-h1" : "k-h1-media"}`}>Apps · Web · Diseño · Foto</h1>
+              <h1 className={`hero-title anim ${hero === "logo" ? "k-h1" : hero === "dispositivos" ? "k-h1-early" : "k-h1-media"}`}>Apps · Web · Diseño · Foto</h1>
               <p className="mono" style={{ margin: 0 }}>
                 Portafolio {new Date().getFullYear()} — haz scroll ↓
               </p>

@@ -114,12 +114,17 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
   }
 
   // Al cambiar de imagen a video (o al revés) el archivo anterior ya no sirve.
-  const chooseHero = (value: Settings["hero_type"]) => setS((prev) => ({ ...prev, hero_type: value, hero_media: value === prev.hero_type ? prev.hero_media : null }));
+  // Las fotos panorámicas se conservan al probar otra portada; solo se descartan al pasar de imagen a video o al revés.
+  const chooseHero = (value: Settings["hero_type"]) =>
+    setS((prev) => {
+      const swapsMedia = (prev.hero_type === "imagen" && value === "video") || (prev.hero_type === "video" && value === "imagen");
+      return { ...prev, hero_type: value, hero_media: swapsMedia ? null : prev.hero_media };
+    });
 
   return (
     <form action={formAction} className="form settings">
       <input type="hidden" name="logo_url" value={s.logo_url ?? ""} />
-      <input type="hidden" name="hero_media" value={s.hero_type === "logo" ? "" : (s.hero_media ?? "")} />
+      <input type="hidden" name="hero_media" value={s.hero_media ?? ""} />
 
       <section className="settings-block">
         <h2 className="settings-h">Secciones</h2>
@@ -202,7 +207,12 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
             </label>
           ))}
         </div>
-        {s.hero_type !== "logo" && (
+        {s.hero_type === "dispositivos" && (
+          <span className="label">
+            Usa la imagen de tu primer proyecto web, tu primera app y tu primer diseño que tengan imagen, y la primera foto de la portada panorámica (o de Fotografía). Para cambiar cuál aparece, cambia el número de Orden en el proyecto.
+          </span>
+        )}
+        {(s.hero_type === "imagen" || s.hero_type === "video") && (
           <div className="field">
             {s.hero_media && s.hero_type === "video" && (
               <div className="hero-preview">
