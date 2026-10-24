@@ -63,23 +63,33 @@ export const HERO_FILTERS: { value: HeroFilter; label: string; hint: string }[] 
   { value: "tinte", label: "Velo de color", hint: "Sus colores, con una capa de color encima." },
 ];
 
+// Cómo pasan los proyectos en la portada Web · App · Diseño.
+export type HeroFx = "giro" | "carrusel" | "liquida" | "liquida-fuerte";
+export const HERO_FXS: { value: HeroFx; label: string; hint: string }[] = [
+  { value: "giro", label: "Giro con luces", hint: "Cada pieza da una vuelta completa al pasar, con luces y líneas de neón." },
+  { value: "carrusel", label: "Carrusel 3D", hint: "Pasan de lado en 3D, sin girar ni luces: más sobrio." },
+  { value: "liquida", label: "Líquida suave", hint: "Como en ART?ST: una pantalla se derrite en la siguiente con el scroll." },
+  { value: "liquida-fuerte", label: "Líquida psicodélica", hint: "La misma, pero con más distorsión y colores girando." },
+];
+
 // picks: proyectos elegidos para la portada Web · App · Diseño (null = todos).
-type HeroData = { slides: HeroSlide[]; look: HeroLook; picks: string[] | null };
+type HeroData = { slides: HeroSlide[]; look: HeroLook; picks: string[] | null; fx: HeroFx };
 
 // hero_media guarda JSON: { slides, look }. Versiones anteriores: un arreglo de fotos o una URL por línea.
 function parseHero(raw: string | null): HeroData {
   const text = (raw ?? "").trim();
   const clean = (list: unknown): HeroSlide[] =>
     Array.isArray(list) ? list.filter((x) => x && typeof x.src === "string" && x.src) : [];
-  if (!text) return { slides: [], look: DEFAULT_LOOK, picks: null };
+  if (!text) return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro" };
   if (text.startsWith("[") || text.startsWith("{")) {
     try {
       const data = JSON.parse(text);
-      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK, picks: null };
+      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK, picks: null, fx: "giro" };
       const look = data.look ?? {};
       return {
         slides: clean(data.slides),
         picks: Array.isArray(data.picks) ? data.picks.filter((x: unknown) => typeof x === "string") : null,
+        fx: HERO_FXS.some((f) => f.value === data.fx) ? data.fx : "giro",
         look: {
           filter: HERO_FILTERS.some((f) => f.value === look.filter) ? look.filter : "none",
           tint: isHex(look.tint) ? look.tint : DEFAULT_LOOK.tint,
@@ -87,17 +97,18 @@ function parseHero(raw: string | null): HeroData {
         },
       };
     } catch {
-      return { slides: [], look: DEFAULT_LOOK, picks: null };
+      return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro" };
     }
   }
-  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK, picks: null };
+  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK, picks: null, fx: "giro" };
 }
 
 export const heroSlides = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).slides;
 export const heroLook = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).look;
 export const heroPicks = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).picks;
-export const serializeHero = (slides: HeroSlide[], look: HeroLook, picks: string[] | null = null) =>
-  slides.length || picks ? JSON.stringify({ slides, look, picks }) : null;
+export const heroFx = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).fx;
+export const serializeHero = (slides: HeroSlide[], look: HeroLook, picks: string[] | null = null, fx: HeroFx = "giro") =>
+  slides.length || picks || fx !== "giro" ? JSON.stringify({ slides, look, picks, fx }) : null;
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },

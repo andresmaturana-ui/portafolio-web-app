@@ -4,7 +4,7 @@ import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroDevices, type HeroItem } from "@/components/HeroDevices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
-import { heroLook, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
+import { heroFx, heroLook, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
 import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
@@ -183,7 +183,7 @@ export default async function Home() {
             )}
             {hero === "video" && <HeroVideo src={settings.hero_media!} />}
             {hero === "dispositivos" && (
-              <HeroDevices items={heroItems} />
+              <HeroDevices items={heroItems} fx={heroFx(settings)} />
             )}
             {(hero === "imagen" || hero === "video") && <div className="hero-shade" aria-hidden="true" />}
             <div className="hero-copy">
