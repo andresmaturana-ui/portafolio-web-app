@@ -662,9 +662,10 @@ img { display: block; max-width: 100%; }
 /* Sticker circular con el logo del proyecto */
 .sticker { position: relative; width: calc(var(--s) * 1px); height: calc(var(--s) * 1px); rotate: -8deg; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45)); pointer-events: none; }
 .sticker-face {
-  position: absolute; inset: 0; border-radius: 50%; background: var(--sticker-bg); border: calc(var(--s) * 0.045px) solid #fff;
+  position: absolute; inset: 0; border-radius: 50%; background: var(--sticker-bg);
   display: grid; place-items: center; overflow: hidden;
 }
+.sticker--borde .sticker-face { border: calc(var(--s) * 0.045px) solid #fff; }
 .sticker-face img { width: 68%; height: 68%; object-fit: contain; }
 /* Despegado: se corta la esquina de abajo a la derecha y se dibuja doblada hacia adentro (reflejo sobre la línea del doblez) */
 .sticker--despegado { filter: drop-shadow(2px 10px 12px rgba(0, 0, 0, 0.5)); }

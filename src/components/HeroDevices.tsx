@@ -307,15 +307,18 @@ function drawSticker(ctx: CanvasRenderingContext2D, st: Sticker, logo: HTMLImage
     ctx.closePath();
     ctx.clip();
   }
-  ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.arc(r, r, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowColor = "transparent";
+  if (st.border) {
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(r, r, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+  }
   ctx.fillStyle = st.color;
   ctx.beginPath();
-  ctx.arc(r, r, r * 0.91, 0, Math.PI * 2);
+  ctx.arc(r, r, st.border ? r * 0.91 : r, 0, Math.PI * 2);
   ctx.fill();
+  ctx.shadowColor = "transparent";
   if (logo) {
     const box = s * 0.68;
     const k = Math.min(box / logo.naturalWidth, box / logo.naturalHeight);

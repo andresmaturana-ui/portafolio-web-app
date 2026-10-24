@@ -298,6 +298,9 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
                       {v === "pegado" ? "Pegado" : "Medio despegado"}
                     </button>
                   ))}
+                  <button type="button" className={`btn ${sticker.border ? "" : "btn--ghost"}`} onClick={() => editSticker({ border: !sticker.border })}>
+                    {sticker.border ? "Con borde blanco" : "Sin borde"}
+                  </button>
                   <button type="button" className="btn btn--danger" onClick={() => setSticker(null)}>
                     Quitar sticker
                   </button>
@@ -313,7 +316,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
               type="file"
               accept="image/*"
               onChange={(e) => {
-                onFiles(e.target.files, (url) => setSticker((prev) => ({ size: "m", color: STICKER_COLORS[0], style: "pegado", ...prev, src: url })));
+                onFiles(e.target.files, (url) => setSticker((prev) => ({ size: "m", color: STICKER_COLORS[0], style: "pegado", border: false, ...prev, src: url })));
                 e.target.value = "";
               }}
             />

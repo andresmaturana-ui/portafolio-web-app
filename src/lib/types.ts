@@ -57,7 +57,8 @@ export function templateFor(project: Pick<Project, "category" | "template">): Te
 
 // Logo del proyecto como sticker circular sobre la portada y la página del proyecto.
 export type StickerSize = "s" | "m" | "l";
-export type Sticker = { src: string; size: StickerSize; color: string; style: "pegado" | "despegado" };
+// border: borde blanco de sticker recortado (por defecto, sin borde).
+export type Sticker = { src: string; size: StickerSize; color: string; style: "pegado" | "despegado"; border: boolean };
 export const STICKER_COLORS = ["#c8ff3d", "#ff3db8", "#ff7a2f", "#3de0ff", "#ffe600", "#9b7bff", "#ff3b3b", "#ffffff", "#111111"];
 export const STICKER_SIZES: { value: StickerSize; label: string; px: number; vh: number }[] = [
   { value: "s", label: "Chico", px: 96, vh: 0.11 },
@@ -74,6 +75,7 @@ export function parseSticker(raw: unknown): Sticker | null {
       size: STICKER_SIZES.some((x) => x.value === d.size) ? d.size : "m",
       color: typeof d.color === "string" && /^#[0-9a-f]{6}$/i.test(d.color) ? d.color : STICKER_COLORS[0],
       style: d.style === "despegado" ? "despegado" : "pegado",
+      border: d.border === true,
     };
   } catch {
     return null;
