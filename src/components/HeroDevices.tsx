@@ -162,15 +162,20 @@ type Frame = { device: Device; cx: number; cy: number; w: number; h: number; rot
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
-function sceneFrames(it: HeroItem, W: number, H: number, t: number, phones: 3 | 5): Frame[] {
+// aspect: ancho/alto de la captura de escritorio (si ya cargó), para que el navegador no la recorte.
+function sceneFrames(it: HeroItem, W: number, H: number, t: number, phones: 3 | 5, aspect?: number): Frame[] {
   const mobile = W < 760;
   const shots = it.screens?.length ? it.screens : [it.src];
   const pick = (k: number) => shots[k] ?? shots[k % shots.length];
   const cy = H * (mobile ? 0.42 : 0.45);
   if (it.kind === "app" && it.desktop) {
     // Ecosistema: la versión escritorio al centro y la app en dos celulares a los lados.
-    const dw = mobile ? W * 0.86 : Math.min(W * 0.56, 900, H * 0.62 * 1.6);
-    const dh = dw * 0.625;
+    // La pantalla toma la proporción de la captura (entre 16:10 y 21:9); si es más alta, corre hacia abajo.
+    const a = Math.min(2.4, Math.max(1.6, aspect || 1.6));
+    let dw = mobile ? W * 0.86 : Math.min(W * 0.56, 900);
+    dw = Math.min(dw, H * 0.6 * a);
+    const screenH = dw / a;
+    const dh = screenH + Math.max(18, screenH * 0.064);
     const dy = mobile ? H * 0.34 : cy - dh * 0.06;
     const ph = mobile ? dh * 0.95 : dh * 0.9;
     const pw = ph * (9 / 19.5);
@@ -392,7 +397,8 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
       const { width, height, dpr } = liquid.size();
       const W = cv.clientWidth;
       const H = cv.clientHeight;
-      const frames = sceneFrames(it, W, H, Math.round(t * 500) / 500, phones);
+      const desk = it.desktop ? getImg(it.desktop) : null;
+      const frames = sceneFrames(it, W, H, Math.round(t * 500) / 500, phones, desk && loaded(desk) ? desk.naturalWidth / desk.naturalHeight : undefined);
       const imgsFor = frames.map((f) => getImg(f.src));
       const back = bg ? getImg(it.bg || it.src) : null;
       const key = `${i}|${frames.map((f) => f.focus.join(",")).join(";")}|${width}x${height}|${imgsFor.filter(loaded).length}|${back ? loaded(back) : "-"}`;
