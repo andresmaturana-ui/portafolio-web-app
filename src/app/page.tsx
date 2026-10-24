@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroDevices, type HeroItem } from "@/components/HeroDevices";
 import { HeroVideo } from "@/components/HeroVideo";
+import { JsonLd } from "@/components/JsonLd";
 import { getSettings } from "@/lib/get-settings";
 import { heroData, heroLook, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
 import { ContactForm } from "@/components/ContactForm";
@@ -128,6 +129,25 @@ export default async function Home() {
 
   return (
     <>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Person",
+              "@id": `${site.url}/#persona`,
+              name: site.name,
+              url: site.url,
+              jobTitle: "Diseñador de apps, sitios web y diseño gráfico",
+              image: `${site.url}/marca/logo`,
+              sameAs: [site.photoSite],
+              knowsAbout: ["Diseño de apps", "Diseño web", "UX/UI", "Diseño gráfico", "Fotografía"],
+              ...(settings.contact_email ? { email: settings.contact_email } : {}),
+            },
+            { "@type": "WebSite", "@id": `${site.url}/#sitio`, url: site.url, name: site.name, inLanguage: "es-CL", publisher: { "@id": `${site.url}/#persona` } },
+          ],
+        }}
+      />
       <header className="site-header">
         <a href="#inicio" className="brand">
           <img src="/marca/logo" alt="" />
@@ -191,7 +211,9 @@ export default async function Home() {
             )}
             {(hero === "imagen" || hero === "video") && <div className="hero-shade" aria-hidden="true" />}
             <div className="hero-copy">
-              <h1 className={`hero-title anim ${hero === "logo" ? "k-h1" : hero === "dispositivos" ? "k-h1-early" : "k-h1-media"}`}>Apps · Web · Diseño · Foto</h1>
+              <h1 className={`hero-title anim ${hero === "logo" ? "k-h1" : hero === "dispositivos" ? "k-h1-early" : "k-h1-media"}`}>
+                <span className="sr-only">{site.name}: </span>Apps · Web · Diseño · Foto
+              </h1>
               <p className="mono" style={{ margin: 0 }}>
                 Portafolio {new Date().getFullYear()} — haz scroll ↓
               </p>
