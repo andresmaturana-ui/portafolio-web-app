@@ -7,7 +7,7 @@ export function StickerBadge({ sticker, className = "", size }: { sticker: Stick
   return (
     <div
       className={`sticker sticker--${sticker.style} ${sticker.border ? "sticker--borde" : ""} ${className}`}
-      style={{ "--s": px, "--sticker-bg": sticker.color } as React.CSSProperties}
+      style={{ "--s": px, "--sticker-bg": sticker.color, "--logo": `${sticker.logo}%` } as React.CSSProperties}
       aria-hidden="true"
     >
       <div className="sticker-face">

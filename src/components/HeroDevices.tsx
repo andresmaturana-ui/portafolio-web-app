@@ -320,7 +320,7 @@ function drawSticker(ctx: CanvasRenderingContext2D, st: Sticker, logo: HTMLImage
   ctx.fill();
   ctx.shadowColor = "transparent";
   if (logo) {
-    const box = s * 0.68;
+    const box = s * (st.logo / 100);
     const k = Math.min(box / logo.naturalWidth, box / logo.naturalHeight);
     const w = logo.naturalWidth * k;
     const h = logo.naturalHeight * k;

@@ -277,6 +277,18 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
                     </button>
                   ))}
                 </div>
+                <label className="label" htmlFor="sticker-logo">
+                  Tamaño del logo dentro del círculo: {sticker.logo}%
+                </label>
+                <input
+                  id="sticker-logo"
+                  type="range"
+                  min={30}
+                  max={100}
+                  value={sticker.logo}
+                  onChange={(e) => editSticker({ logo: Number(e.target.value) })}
+                  style={{ width: "100%", accentColor: "var(--accent)" }}
+                />
                 <span className="label">Color</span>
                 <div className="sticker-colors">
                   {STICKER_COLORS.map((c) => (
@@ -316,7 +328,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
               type="file"
               accept="image/*"
               onChange={(e) => {
-                onFiles(e.target.files, (url) => setSticker((prev) => ({ size: "m", color: STICKER_COLORS[0], style: "pegado", border: false, ...prev, src: url })));
+                onFiles(e.target.files, (url) => setSticker((prev) => ({ size: "m", color: STICKER_COLORS[0], style: "pegado", border: false, logo: 68, ...prev, src: url })));
                 e.target.value = "";
               }}
             />
