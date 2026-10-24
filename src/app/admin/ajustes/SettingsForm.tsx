@@ -209,7 +209,8 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
         </div>
         {s.hero_type === "dispositivos" && (
           <span className="label">
-            Usa la imagen de tu primer proyecto web, tu primera app y tu primer diseño que tengan imagen, y la primera foto de la portada panorámica (o de Fotografía). Para cambiar cuál aparece, cambia el número de Orden en el proyecto.
+            Los celulares muestran las capturas de tus apps; a los lados van tu primer proyecto web y tu primer diseño con imagen. Cada pieza sale solo si
+            su sección está visible (abajo, en Secciones). Para cambiar cuál aparece, cambia el número de Orden en el proyecto.
           </span>
         )}
         {(s.hero_type === "imagen" || s.hero_type === "video") && (

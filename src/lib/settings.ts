@@ -97,7 +97,7 @@ export const serializeHero = (slides: HeroSlide[], look: HeroLook) => (slides.le
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },
-  { value: "dispositivos", label: "Web · App · Diseño · Foto", hint: "Un navegador, un celular, un afiche y una foto de tus proyectos se arman con el scroll." },
+  { value: "dispositivos", label: "Web · App · Diseño", hint: "Un anillo de celulares con tus apps gira en 3D con el scroll, con tu web y tu diseño a los lados." },
   { value: "imagen", label: "Imagen panorámica", hint: "Una o varias fotos pasan de lado con el scroll." },
   { value: "video", label: "Video", hint: "El video avanza al bajar y retrocede al subir." },
 ];

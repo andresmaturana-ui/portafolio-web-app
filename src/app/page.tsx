@@ -162,10 +162,9 @@ export default async function Home() {
             {hero === "video" && <HeroVideo src={settings.hero_media!} />}
             {hero === "dispositivos" && (
               <HeroDevices
-                web={heroWeb && { image: heroWeb.cover_url, url: heroWeb.link, title: heroWeb.title }}
-                app={apps.find((p) => p.cover_url)?.cover_url}
-                design={designs.find((p) => p.cover_url)?.cover_url}
-                photo={heroSlides(settings)[0]?.src ?? photos.find((p) => p.cover_url)?.cover_url}
+                apps={visibleSections.includes("app") ? (apps.map((p) => p.cover_url).filter(Boolean) as string[]) : []}
+                web={visibleSections.includes("web") && heroWeb ? { image: heroWeb.cover_url, url: heroWeb.link, title: heroWeb.title } : undefined}
+                design={visibleSections.includes("diseno") && designs.length ? (designs.find((p) => p.cover_url)?.cover_url ?? null) : undefined}
               />
             )}
             {(hero === "imagen" || hero === "video") && <div className="hero-shade" aria-hidden="true" />}
