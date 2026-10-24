@@ -166,7 +166,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
             </li>
           ))}
         </ol>
-        <span className="label">Ordénalas con las flechas y apaga las que no quieras mostrar: desaparecen del inicio y del menú (sus proyectos no se borran). Contacto siempre va al final.</span>
+        <span className="label">Ordénalas con las flechas y apaga las que no quieras mostrar: desaparecen del inicio y del menú (sus proyectos no se borran). Si apagas Fotografía, su botón del menú lleva a andresmaturana.com. Contacto siempre va al final.</span>
       </section>
 
       <section className="settings-block">

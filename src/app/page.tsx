@@ -29,7 +29,15 @@ export default async function Home() {
     .filter((id): id is "app" | "web" | "diseno" => id !== "foto")
     .flatMap((id) => (id === "app" ? apps : id === "web" ? webs : designs).map((p) => ({ id, p })))
     .filter(({ p }) => p.cover_url && (!picks || picks.includes(p.slug)))
-    .map(({ id, p }) => ({ kind: id, src: p.cover_url!, title: p.title, slug: p.slug, url: p.link }));
+    .map(({ id, p }) => ({
+      kind: id,
+      src: p.cover_url!,
+      title: p.title,
+      slug: p.slug,
+      url: p.link,
+      scroll: p.scroll === "horizontal" ? ("horizontal" as const) : ("vertical" as const),
+      screens: [p.cover_url, ...p.gallery].filter(Boolean) as string[],
+    }));
 
   // Sin imagen o video subido (o sin proyectos para la portada Web · App · Diseño), la portada vuelve al logo.
   const hero =
@@ -124,7 +132,15 @@ export default async function Home() {
           </span>
         </a>
         <nav className="site-nav" aria-label="Secciones">
-          {visibleSections.map((id) => {
+          {settings.section_order.map((id) => {
+            // Con Fotografía apagada, el botón lleva a andresmaturana.com, donde están las fotos.
+            if (id === "foto" && settings.sections_hidden.includes("foto"))
+              return (
+                <a key={id} className="mono" href={site.photoSite} target="_blank" rel="noopener">
+                  Fotografía ↗
+                </a>
+              );
+            if (settings.sections_hidden.includes(id)) return null;
             if (id === "app") return apps.length > 0 && <a key={id} className="mono" href="#apps">Apps</a>;
             if (id === "web") return webs.length > 0 && <a key={id} className="mono hide-sm" href="#web">Web</a>;
             if (id === "foto") return <a key={id} className="mono" href="#foto">Fotografía</a>;
