@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { Browser, Phone, Tablet } from "@/components/Devices";
-import { HeroDevices } from "@/components/HeroDevices";
+import { HeroDevices, type HeroItem } from "@/components/HeroDevices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
-import { heroLook, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
+import { heroLook, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
 import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
@@ -21,15 +21,21 @@ export default async function Home() {
   const photos = byCategory(projects, "foto");
   const designs = byCategory(projects, "diseno");
   const settings = await getSettings();
-  // Sin imagen o video subido, la portada vuelve al logo.
-  const hero =
-    settings.hero_type === "dispositivos" ? "dispositivos" : settings.hero_media && settings.hero_type !== "logo" ? settings.hero_type : "logo";
-  // Con más fotos la portada dura más scroll, para que cada una alcance a verse.
-  const heroHeight = hero === "logo" ? 1800 : hero === "video" || hero === "dispositivos" ? 2400 : Math.max(2400, 1200 + heroSlides(settings).length * 450);
-
-  // Para la portada Web · App · Diseño · Foto: el primer proyecto de cada tipo que tenga imagen.
-  const heroWeb = webs.find((p) => p.cover_url) ?? webs[0];
   const visibleSections = settings.section_order.filter((id) => !settings.sections_hidden.includes(id));
+
+  // Portada Web · App · Diseño: proyectos con imagen de las secciones visibles, en el orden de las secciones.
+  const picks = heroPicks(settings);
+  const heroItems: HeroItem[] = visibleSections
+    .filter((id): id is "app" | "web" | "diseno" => id !== "foto")
+    .flatMap((id) => (id === "app" ? apps : id === "web" ? webs : designs).map((p) => ({ id, p })))
+    .filter(({ p }) => p.cover_url && (!picks || picks.includes(p.slug)))
+    .map(({ id, p }) => ({ kind: id, src: p.cover_url!, title: p.title, slug: p.slug, url: p.link }));
+
+  // Sin imagen o video subido (o sin proyectos para la portada Web · App · Diseño), la portada vuelve al logo.
+  const hero =
+    settings.hero_type === "dispositivos" ? (heroItems.length ? "dispositivos" : "logo") : settings.hero_media && settings.hero_type !== "logo" ? settings.hero_type : "logo";
+  // Con más fotos la portada dura más scroll, para que cada una alcance a verse.
+  const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : hero === "dispositivos" ? Math.max(2400, 1400 + heroItems.length * 520) : Math.max(2400, 1200 + heroSlides(settings).length * 450);
 
   let n = 0;
   const next = () => pad2(++n);
@@ -161,11 +167,7 @@ export default async function Home() {
             )}
             {hero === "video" && <HeroVideo src={settings.hero_media!} />}
             {hero === "dispositivos" && (
-              <HeroDevices
-                apps={visibleSections.includes("app") ? (apps.map((p) => p.cover_url).filter(Boolean) as string[]) : []}
-                web={visibleSections.includes("web") && heroWeb ? { image: heroWeb.cover_url, url: heroWeb.link, title: heroWeb.title } : undefined}
-                design={visibleSections.includes("diseno") && designs.length ? (designs.find((p) => p.cover_url)?.cover_url ?? null) : undefined}
-              />
+              <HeroDevices items={heroItems} />
             )}
             {(hero === "imagen" || hero === "video") && <div className="hero-shade" aria-hidden="true" />}
             <div className="hero-copy">

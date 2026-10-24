@@ -7,6 +7,7 @@ import {
   HERO_TYPES,
   HERO_FILTERS,
   heroLook,
+  heroPicks,
   heroSlides,
   MONO_FONTS,
   PALETTES,
@@ -28,7 +29,7 @@ const COLORS: { name: "color_bg" | "color_text" | "color_accent"; label: string 
   { name: "color_text", label: "Texto" },
 ];
 
-export type ProjectOption = { slug: string; title: string; client: string | null; year: number | null; images: string[] };
+export type ProjectOption = { slug: string; title: string; category: string; client: string | null; year: number | null; images: string[] };
 
 export function SettingsForm({ initial, projects }: { initial: Settings; projects: ProjectOption[] }) {
   const [state, formAction, saving] = useActionState<SettingsState, FormData>(saveSettings, {});
@@ -62,9 +63,19 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
 
   const slides = heroSlides(s);
   const look = heroLook(s);
-  const setSlides = (list: HeroSlide[]) => set("hero_media", serializeHero(list, look));
-  const addSlides = (list: HeroSlide[]) => setS((prev) => ({ ...prev, hero_media: serializeHero([...heroSlides(prev), ...list], heroLook(prev)) }));
-  const setLook = (patch: Partial<HeroLook>) => set("hero_media", serializeHero(slides, { ...look, ...patch }));
+  const picks = heroPicks(s);
+  const setSlides = (list: HeroSlide[]) => set("hero_media", serializeHero(list, look, picks));
+  const addSlides = (list: HeroSlide[]) =>
+    setS((prev) => ({ ...prev, hero_media: serializeHero([...heroSlides(prev), ...list], heroLook(prev), heroPicks(prev)) }));
+  const setLook = (patch: Partial<HeroLook>) => set("hero_media", serializeHero(slides, { ...look, ...patch }, picks));
+  // Proyectos que pueden ir en la portada Web · App · Diseño (los que tienen imagen).
+  const coverable = projects.filter((p) => ["app", "web", "diseno"].includes(p.category) && p.images.length);
+  const isPicked = (slug: string) => !picks || picks.includes(slug);
+  const togglePick = (slug: string) => {
+    const current = picks ?? coverable.map((p) => p.slug);
+    const next = current.includes(slug) ? current.filter((x) => x !== slug) : [...current, slug];
+    set("hero_media", serializeHero(slides, look, next));
+  };
   const editSlide = (i: number, patch: Partial<HeroSlide>) => setSlides(slides.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const moveSlide = (i: number, to: number) => {
     const next = [...slides];
@@ -208,10 +219,25 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
           ))}
         </div>
         {s.hero_type === "dispositivos" && (
-          <span className="label">
-            Los celulares muestran las capturas de tus apps; a los lados van tu primer proyecto web y tu primer diseño con imagen. Cada pieza sale solo si
-            su sección está visible (abajo, en Secciones). Para cambiar cuál aparece, cambia el número de Orden en el proyecto.
-          </span>
+          <div className="field">
+            <span className="label">
+              Marca los proyectos que pasan por la portada (uno por uno, de lado, en 3D). Van en el orden de las secciones y, dentro de cada una, según el
+              Orden del proyecto. Si apagas una sección, sus proyectos no salen.
+            </span>
+            {coverable.length === 0 && <div className="notice">Aún no tienes apps, webs o diseños con imagen.</div>}
+            <div className="pick-grid">
+              {coverable.map((p) => (
+                <label key={p.slug} className={`pick ${isPicked(p.slug) ? "is-on" : ""}`}>
+                  <input type="checkbox" checked={isPicked(p.slug)} onChange={() => togglePick(p.slug)} />
+                  <img src={p.images[0]} alt="" />
+                  <span>
+                    <strong>{p.title}</strong>
+                    <span className="mono">{p.category === "app" ? "App" : p.category === "web" ? "Web" : "Diseño"}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
         )}
         {(s.hero_type === "imagen" || s.hero_type === "video") && (
           <div className="field">

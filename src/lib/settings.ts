@@ -63,21 +63,23 @@ export const HERO_FILTERS: { value: HeroFilter; label: string; hint: string }[] 
   { value: "tinte", label: "Velo de color", hint: "Sus colores, con una capa de color encima." },
 ];
 
-type HeroData = { slides: HeroSlide[]; look: HeroLook };
+// picks: proyectos elegidos para la portada Web · App · Diseño (null = todos).
+type HeroData = { slides: HeroSlide[]; look: HeroLook; picks: string[] | null };
 
 // hero_media guarda JSON: { slides, look }. Versiones anteriores: un arreglo de fotos o una URL por línea.
 function parseHero(raw: string | null): HeroData {
   const text = (raw ?? "").trim();
   const clean = (list: unknown): HeroSlide[] =>
     Array.isArray(list) ? list.filter((x) => x && typeof x.src === "string" && x.src) : [];
-  if (!text) return { slides: [], look: DEFAULT_LOOK };
+  if (!text) return { slides: [], look: DEFAULT_LOOK, picks: null };
   if (text.startsWith("[") || text.startsWith("{")) {
     try {
       const data = JSON.parse(text);
-      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK };
+      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK, picks: null };
       const look = data.look ?? {};
       return {
         slides: clean(data.slides),
+        picks: Array.isArray(data.picks) ? data.picks.filter((x: unknown) => typeof x === "string") : null,
         look: {
           filter: HERO_FILTERS.some((f) => f.value === look.filter) ? look.filter : "none",
           tint: isHex(look.tint) ? look.tint : DEFAULT_LOOK.tint,
@@ -85,19 +87,21 @@ function parseHero(raw: string | null): HeroData {
         },
       };
     } catch {
-      return { slides: [], look: DEFAULT_LOOK };
+      return { slides: [], look: DEFAULT_LOOK, picks: null };
     }
   }
-  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK };
+  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK, picks: null };
 }
 
 export const heroSlides = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).slides;
 export const heroLook = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).look;
-export const serializeHero = (slides: HeroSlide[], look: HeroLook) => (slides.length ? JSON.stringify({ slides, look }) : null);
+export const heroPicks = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).picks;
+export const serializeHero = (slides: HeroSlide[], look: HeroLook, picks: string[] | null = null) =>
+  slides.length || picks ? JSON.stringify({ slides, look, picks }) : null;
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },
-  { value: "dispositivos", label: "Web · App · Diseño", hint: "Como las apps del portafolio: los celulares se levantan y se abren con el scroll, con tu web de fondo y tu diseño al lado." },
+  { value: "dispositivos", label: "Web · App · Diseño", hint: "Tus apps, webs y diseños pasan de lado uno por uno en 3D con el scroll. Tú eliges cuáles." },
   { value: "imagen", label: "Imagen panorámica", hint: "Una o varias fotos pasan de lado con el scroll." },
   { value: "video", label: "Video", hint: "El video avanza al bajar y retrocede al subir." },
 ];
