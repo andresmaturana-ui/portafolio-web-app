@@ -71,3 +71,7 @@ create policy "mensajes admins editan" on public.portfolio_messages
 drop policy if exists "mensajes admins borran" on public.portfolio_messages;
 create policy "mensajes admins borran" on public.portfolio_messages
   for delete using (public.portfolio_is_admin());
+
+-- Capturas de la versión escritorio de una app (para mostrar el ecosistema celular + escritorio).
+-- No cambia los proyectos que ya subiste.
+alter table public.portfolio_projects add column if not exists desktop text[] not null default '{}';

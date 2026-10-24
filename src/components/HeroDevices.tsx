@@ -15,6 +15,8 @@ export type HeroItem = {
   /* Como en las secciones: la captura corre dentro de la pantalla mientras el proyecto está al centro */
   scroll?: "vertical" | "horizontal";
   screens?: string[];
+  /* Apps con versión escritorio: su primera captura de escritorio */
+  desktop?: string;
 };
 
 // Dónde va el proyecto según el scroll dentro de la sección. Cada uno tiene su tramo: primero queda al
@@ -163,6 +165,20 @@ function sceneFrames(it: HeroItem, W: number, H: number, t: number): Frame[] {
   const shots = it.screens?.length ? it.screens : [it.src];
   const pick = (k: number) => shots[k] ?? shots[0];
   const cy = H * (mobile ? 0.42 : 0.45);
+  if (it.kind === "app" && it.desktop) {
+    // Ecosistema: la versión escritorio al centro y la app en dos celulares a los lados.
+    const dw = mobile ? W * 0.86 : Math.min(W * 0.56, 900, H * 0.62 * 1.6);
+    const dh = dw * 0.625;
+    const dy = mobile ? H * 0.34 : cy - dh * 0.06;
+    const ph = mobile ? dh * 0.95 : dh * 0.9;
+    const pw = ph * (9 / 19.5);
+    const focus: [number, number] = [0.5, t];
+    return [
+      { device: "desktop", cx: W / 2, cy: dy, w: dw, h: dh, rot: 0, src: it.desktop, focus },
+      { device: "phone", cx: mobile ? W * 0.76 : W / 2 + dw / 2 + pw * 0.1, cy: dy + dh * (mobile ? 0.7 : 0.2), w: pw, h: ph, rot: 0.05, src: pick(1), focus: shots[1] ? focus : [0.5, clamp01(t * 0.5 + 0.5)] },
+      { device: "phone", cx: mobile ? W * 0.24 : W / 2 - dw / 2 - pw * 0.1, cy: dy + dh * (mobile ? 0.7 : 0.2), w: pw, h: ph, rot: -0.05, src: pick(0), focus },
+    ];
+  }
   if (it.kind === "web") {
     // Escritorio al centro, tablet a la derecha y celular a la izquierda, un poco delante.
     const dw = mobile ? W * 0.86 : Math.min(W * 0.56, 900, H * 0.62 * 1.6);
@@ -320,7 +336,7 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
     };
     const loaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
     // Lista para mostrar: todas sus capturas cargaron (o fallaron).
-    const ready = (i: number) => [items[i].src, ...(items[i].screens ?? [])].every((src) => getImg(src).complete);
+    const ready = (i: number) => [items[i].src, ...(items[i].screens ?? []), ...(items[i].desktop ? [items[i].desktop!] : [])].every((src) => getImg(src).complete);
     const load = (i: number) => {
       i = ((i % n) + n) % n;
       ready(i);

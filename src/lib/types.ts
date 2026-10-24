@@ -24,6 +24,8 @@ export type Project = {
   sort: number;
   template?: string | null;
   scroll?: "vertical" | "horizontal" | null;
+  /* Apps con versión escritorio: sus capturas, para mostrar el ecosistema completo */
+  desktop?: string[] | null;
   created_at?: string;
 };
 

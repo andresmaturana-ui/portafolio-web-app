@@ -37,6 +37,7 @@ export default async function Home() {
       url: p.link,
       scroll: p.scroll === "horizontal" ? ("horizontal" as const) : ("vertical" as const),
       screens: [p.cover_url, ...p.gallery].filter(Boolean) as string[],
+      desktop: id === "app" ? p.desktop?.[0] || undefined : undefined,
     }));
 
   // Sin imagen o video subido (o sin proyectos para la portada Web · App · Diseño), la portada vuelve al logo.

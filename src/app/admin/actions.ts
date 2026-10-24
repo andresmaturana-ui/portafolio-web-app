@@ -19,8 +19,10 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   if (!CATEGORIES.some((c) => c.value === category)) return { error: "Elige una categoría." };
 
   let images: string[] = [];
+  let desktop: string[] = [];
   try {
     images = JSON.parse(String(formData.get("images") ?? "[]"));
+    desktop = category === "app" ? JSON.parse(String(formData.get("desktop") ?? "[]")) : [];
   } catch {
     return { error: "No se pudieron leer las imágenes." };
   }
@@ -42,6 +44,7 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
     scroll: formData.get("scroll") === "horizontal" ? "horizontal" : "vertical",
     cover_url: images[0] ?? null,
     gallery: images.slice(1),
+    desktop,
     updated_at: new Date().toISOString(),
   };
 
@@ -49,8 +52,14 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
     id ? supabase.from(TABLE).update(data).eq("id", id) : supabase.from(TABLE).insert(data);
   let { error } = await write(record);
   // Base de datos sin las columnas nuevas (falta correr el SQL nuevo): guarda igual sin ellas.
+  let missingDesktop = false;
+  if (error && /desktop/.test(error.message)) {
+    const { desktop: _d, ...rest } = record;
+    ({ error } = await write(rest));
+    missingDesktop = !error && desktop.length > 0;
+  }
   if (error && /template|scroll/.test(error.message)) {
-    const { template: _t, scroll: _s, ...rest } = record;
+    const { template: _t, scroll: _s, desktop: _d, ...rest } = record;
     ({ error } = await write(rest));
   }
 
@@ -61,6 +70,9 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
 
   revalidatePath("/");
   revalidatePath(`/proyectos/${record.slug}`);
+  if (missingDesktop) {
+    return { error: "Se guardó el proyecto, pero no las capturas de escritorio: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase y guarda otra vez." };
+  }
   redirect(`/admin?cat=${category}`);
 }
 

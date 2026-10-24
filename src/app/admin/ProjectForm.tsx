@@ -19,6 +19,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const [images, setImages] = useState<string[]>(
     project ? ([project.cover_url, ...project.gallery].filter(Boolean) as string[]) : [],
   );
+  const [desktop, setDesktop] = useState<string[]>(project?.desktop ?? []);
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
   const [urlDraft, setUrlDraft] = useState("");
@@ -27,7 +28,8 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const templates = TEMPLATES.filter((t) => t.for.includes(category));
   const autoLabel = TEMPLATES.find((t) => t.value === DEFAULT_TEMPLATE[category])?.label;
 
-  async function onFiles(files: FileList | null) {
+  // add: dónde se suman las imágenes subidas (capturas del proyecto o de la versión escritorio).
+  async function onFiles(files: FileList | null, add: (url: string) => void = (url) => setImages((prev) => [...prev, url])) {
     if (!files?.length) return;
     setUploadError("");
     const supabase = createClient();
@@ -40,7 +42,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
         setUploadError(`No se pudo subir ${file.name}: ${error.message}`);
       } else {
         const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-        setImages((prev) => [...prev, data.publicUrl]);
+        add(data.publicUrl);
       }
       setUploading((n) => n - 1);
     }
@@ -59,6 +61,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
     <form action={formAction} className="form">
       {project && <input type="hidden" name="id" value={project.id} />}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
+      <input type="hidden" name="desktop" value={JSON.stringify(desktop)} />
 
       {state.error && <div className="notice notice--error" role="alert">{state.error}</div>}
 
@@ -201,6 +204,51 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
         {uploading > 0 && <span className="mono">Subiendo {uploading} imagen(es)…</span>}
         {uploadError && <div className="notice notice--error" role="alert">{uploadError}</div>}
       </div>
+
+      {category === "app" && (
+        <div className="uploader">
+          <div className="field">
+            <span className="label">Versión escritorio (opcional)</span>
+            <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
+              Si la app también se usa en el computador, sube aquí sus capturas. En la página del proyecto se muestra el ecosistema: el escritorio junto al
+              celular. La 1ª va en el navegador grande y también aparece en la portada líquida.
+            </span>
+          </div>
+          {desktop.length > 0 && (
+            <div className="thumbs">
+              {desktop.map((src, i) => (
+                <div key={src + i} className="thumb thumb--wide">
+                  <img src={src} alt={`Escritorio ${i + 1}`} />
+                  <div className="thumb-actions">
+                    {i > 0 && (
+                      <button type="button" onClick={() => setDesktop((prev) => [prev[i], ...prev.filter((_, j) => j !== i)])}>
+                        Primera
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setDesktop((prev) => prev.filter((_, j) => j !== i))} aria-label="Quitar captura de escritorio">
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="field">
+            <label htmlFor="desktop-files">Subir capturas de escritorio</label>
+            <input
+              className="input"
+              id="desktop-files"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                onFiles(e.target.files, (url) => setDesktop((prev) => [...prev, url]));
+                e.target.value = "";
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="form-grid">
         <div className="field">

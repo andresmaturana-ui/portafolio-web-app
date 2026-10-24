@@ -34,6 +34,30 @@ function Cta({ p, label = "Ver en vivo ↗" }: { p: Project; label?: string }) {
   );
 }
 
+/* ---------- Ecosistema: la app en el escritorio y en el celular ---------- */
+function Ecosistema({ p }: { p: Project }) {
+  const desk = (p.desktop ?? []).filter(Boolean);
+  if (!desk.length) return null;
+  const phone = images(p);
+  return (
+    <section className="tpl-section">
+      <p className="mono eyebrow">Ecosistema</p>
+      <h2 className="tpl-eco-title">En el celular y en el escritorio</h2>
+      <div className="tpl-eco rv">
+        <Browser className="tpl-eco-browser" siteClassName="tpl-browser-site" image={desk[0]} url={p.link} title={p.title} alt={`${p.title} en escritorio`} />
+        {phone[0] && <Phone className="phone--static tpl-eco-phone" image={phone[0]} alt={`${p.title} en el celular`} />}
+      </div>
+      {desk.length > 1 && (
+        <div className="tpl-eco-more">
+          {desk.slice(1).map((src, i) => (
+            <Browser key={src + i} className="tpl-eco-browser rv" siteClassName="tpl-browser-site" image={src} url={p.link} title={p.title} alt={`${p.title} en escritorio, pantalla ${i + 2}`} />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 /* ---------- App · Escaparate ---------- */
 export function AppEscaparate({ p }: { p: Project }) {
   const imgs = images(p);
@@ -67,6 +91,8 @@ export function AppEscaparate({ p }: { p: Project }) {
           />
         </div>
       </section>
+
+      <Ecosistema p={p} />
 
       {imgs.length > 1 && (
         <section id="pantallas" className="tpl-section">
@@ -113,6 +139,7 @@ export function AppHistoria({ p }: { p: Project }) {
           <Cta p={p} label="Abrir la app ↗" />
         </div>
       </section>
+      <Ecosistema p={p} />
       {imgs.map((src, i) => (
         <section key={src + i} className={`tpl-story ${i % 2 ? "tpl-story--rev" : ""}`}>
           <div className="tpl-story-device rv">
