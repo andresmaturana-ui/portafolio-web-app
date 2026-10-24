@@ -77,3 +77,5 @@ create policy "mensajes admins borran" on public.portfolio_messages
 alter table public.portfolio_projects add column if not exists desktop text[] not null default '{}';
 -- Imagen de fondo del proyecto en la portada líquida (vacía = su portada)
 alter table public.portfolio_projects add column if not exists hero_bg text;
+-- Logo del proyecto como sticker (JSON: imagen, tamaño, color y estilo)
+alter table public.portfolio_projects add column if not exists sticker text;

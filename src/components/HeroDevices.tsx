@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Browser, Phone } from "@/components/Devices";
 import { createLiquid, liquidSupported } from "@/components/liquid";
 import type { HeroFx } from "@/lib/settings";
+import { STICKER_SIZES, type Sticker } from "@/lib/types";
 
 export type HeroItem = {
   kind: "app" | "web" | "diseno";
@@ -19,6 +20,8 @@ export type HeroItem = {
   desktop?: string;
   /* Fondo de la portada líquida (si no hay, se usa la portada del proyecto) */
   bg?: string;
+  /* Logo del proyecto como sticker */
+  sticker?: Sticker;
 };
 
 // Dónde va el proyecto según el scroll dentro de la sección. Cada uno tiene su tramo: primero queda al
@@ -282,6 +285,68 @@ function drawBackground(ctx: CanvasRenderingContext2D, img: HTMLImageElement, W:
   ctx.fillRect(0, 0, W, H);
 }
 
+// Sticker con el logo, pegado en la esquina de arriba del aparato principal (igual que StickerBadge).
+function drawSticker(ctx: CanvasRenderingContext2D, st: Sticker, logo: HTMLImageElement | null, x: number, y: number, s: number) {
+  const r = s / 2;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate((-8 * Math.PI) / 180);
+  ctx.translate(-r, -r);
+  const peel = st.style === "despegado";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = s * 0.1;
+  ctx.shadowOffsetY = s * 0.05;
+  ctx.save();
+  if (peel) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(s, 0);
+    ctx.lineTo(s, s * 0.52);
+    ctx.lineTo(s * 0.52, s);
+    ctx.lineTo(0, s);
+    ctx.closePath();
+    ctx.clip();
+  }
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(r, r, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = st.color;
+  ctx.beginPath();
+  ctx.arc(r, r, r * 0.91, 0, Math.PI * 2);
+  ctx.fill();
+  if (logo) {
+    const box = s * 0.68;
+    const k = Math.min(box / logo.naturalWidth, box / logo.naturalHeight);
+    const w = logo.naturalWidth * k;
+    const h = logo.naturalHeight * k;
+    ctx.drawImage(logo, r - w / 2, r - h / 2, w, h);
+  }
+  ctx.restore();
+  if (peel) {
+    // La esquina doblada: el reflejo del trozo cortado sobre la línea del doblez.
+    ctx.transform(0, -1, -1, 0, s * 1.52, s * 1.52);
+    ctx.beginPath();
+    ctx.moveTo(s, s * 0.52);
+    ctx.lineTo(s, s);
+    ctx.lineTo(s * 0.52, s);
+    ctx.closePath();
+    ctx.clip();
+    const g = ctx.createLinearGradient(s, s, s * 0.5, s * 0.5);
+    g.addColorStop(0, "#d9d9d9");
+    g.addColorStop(0.45, "#ffffff");
+    g.addColorStop(1, "#bdbdbd");
+    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowBlur = s * 0.06;
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(r, r, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function drawFrame(ctx: CanvasRenderingContext2D, f: Frame, img: HTMLImageElement | null) {
   const { w, h } = f;
   ctx.save();
@@ -384,7 +449,7 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
     const loaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
     // Lista para mostrar: todas sus capturas cargaron (o fallaron).
     const ready = (i: number) =>
-      [items[i].src, ...(items[i].screens ?? []), items[i].desktop, bg ? items[i].bg : undefined].every((src) => !src || getImg(src).complete);
+      [items[i].src, ...(items[i].screens ?? []), items[i].desktop, bg ? items[i].bg : undefined, items[i].sticker?.src].every((src) => !src || getImg(src).complete);
     const pageBg = getComputedStyle(el).getPropertyValue("--bg").trim() || "#07080a";
     const load = (i: number) => {
       i = ((i % n) + n) % n;
@@ -401,7 +466,7 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
       const frames = sceneFrames(it, W, H, Math.round(t * 500) / 500, phones, desk && loaded(desk) ? desk.naturalWidth / desk.naturalHeight : undefined);
       const imgsFor = frames.map((f) => getImg(f.src));
       const back = bg ? getImg(it.bg || it.src) : null;
-      const key = `${i}|${frames.map((f) => f.focus.join(",")).join(";")}|${width}x${height}|${imgsFor.filter(loaded).length}|${back ? loaded(back) : "-"}`;
+      const key = `${i}|${frames.map((f) => f.focus.join(",")).join(";")}|${width}x${height}|${imgsFor.filter(loaded).length}|${back ? loaded(back) : "-"}|${it.sticker ? loaded(getImg(it.sticker.src)) : "-"}`;
       const s = slots[slot];
       if (s.key === key) return null;
       s.key = key;
@@ -415,6 +480,13 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (back && loaded(back)) drawBackground(ctx, back, W, H, pageBg);
       frames.forEach((f, k) => drawFrame(ctx, f, loaded(imgsFor[k]) ? imgsFor[k] : null));
+      if (it.sticker) {
+        // Va sobre el aparato más grande, en su esquina de arriba a la derecha.
+        const main = frames.reduce((a, b) => (b.w * b.h > a.w * a.h ? b : a));
+        const size = H * (STICKER_SIZES.find((x) => x.value === it.sticker!.size)?.vh ?? 0.15) * (W < 760 ? 0.8 : 1);
+        const logo = getImg(it.sticker.src);
+        drawSticker(ctx, it.sticker, loaded(logo) ? logo : null, main.cx + main.w / 2 - size * 0.15, main.cy - main.h / 2 + size * 0.2, size);
+      }
       return s.canvas;
     };
 

@@ -28,6 +28,8 @@ export type Project = {
   desktop?: string[] | null;
   /* Imagen de fondo para la portada líquida (vacía = la portada del proyecto) */
   hero_bg?: string | null;
+  /* Logo del proyecto como sticker circular (JSON de Sticker) */
+  sticker?: string | null;
   created_at?: string;
 };
 
@@ -51,4 +53,29 @@ export const DEFAULT_TEMPLATE: Record<Category, TemplateId> = {
 export function templateFor(project: Pick<Project, "category" | "template">): TemplateId {
   const t = TEMPLATES.find((x) => x.value === project.template);
   return t ? t.value : DEFAULT_TEMPLATE[project.category];
+}
+
+// Logo del proyecto como sticker circular sobre la portada y la página del proyecto.
+export type StickerSize = "s" | "m" | "l";
+export type Sticker = { src: string; size: StickerSize; color: string; style: "pegado" | "despegado" };
+export const STICKER_COLORS = ["#c8ff3d", "#ff3db8", "#ff7a2f", "#3de0ff", "#ffe600", "#9b7bff", "#ff3b3b", "#ffffff", "#111111"];
+export const STICKER_SIZES: { value: StickerSize; label: string; px: number; vh: number }[] = [
+  { value: "s", label: "Chico", px: 96, vh: 0.11 },
+  { value: "m", label: "Mediano", px: 140, vh: 0.15 },
+  { value: "l", label: "Grande", px: 190, vh: 0.2 },
+];
+
+export function parseSticker(raw: unknown): Sticker | null {
+  try {
+    const d = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!d || typeof d.src !== "string" || !d.src) return null;
+    return {
+      src: d.src,
+      size: STICKER_SIZES.some((x) => x.value === d.size) ? d.size : "m",
+      color: typeof d.color === "string" && /^#[0-9a-f]{6}$/i.test(d.color) ? d.color : STICKER_COLORS[0],
+      style: d.style === "despegado" ? "despegado" : "pegado",
+    };
+  } catch {
+    return null;
+  }
 }

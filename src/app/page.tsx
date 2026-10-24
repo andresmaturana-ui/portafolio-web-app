@@ -9,7 +9,7 @@ import { heroData, heroLook, heroPicks, heroSlides, whatsappLink, type SectionId
 import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
-import type { Project } from "@/lib/types";
+import { parseSticker, type Project } from "@/lib/types";
 
 export const revalidate = 60;
 
@@ -42,6 +42,7 @@ export default async function Home() {
       screens: [p.cover_url, ...p.gallery].filter(Boolean) as string[],
       desktop: id === "app" ? p.desktop?.[0] || undefined : undefined,
       bg: p.hero_bg || undefined,
+      sticker: parseSticker(p.sticker) ?? undefined,
     }));
 
   // Sin imagen o video subido (o sin proyectos para la portada Web · App · Diseño), la portada vuelve al logo.

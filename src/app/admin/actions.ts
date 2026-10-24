@@ -6,7 +6,7 @@ import { slugify } from "@/lib/projects";
 import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseHiddenSections, parseSectionOrder, SETTINGS_TABLE, serializeSections, type Settings } from "@/lib/settings";
 import { MESSAGES_TABLE, TABLE } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORIES, type Category } from "@/lib/types";
+import { CATEGORIES, parseSticker, type Category } from "@/lib/types";
 
 export type FormState = { error?: string };
 
@@ -46,6 +46,10 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
     gallery: images.slice(1),
     desktop,
     hero_bg: String(formData.get("hero_bg") ?? "").trim() || null,
+    sticker: (() => {
+      const st = parseSticker(String(formData.get("sticker") ?? ""));
+      return st ? JSON.stringify(st) : null;
+    })(),
     updated_at: new Date().toISOString(),
   };
 
@@ -54,13 +58,13 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   let { error } = await write(record);
   // Base de datos sin las columnas nuevas (falta correr el SQL nuevo): guarda igual sin ellas.
   let missingDesktop = false;
-  if (error && /desktop|hero_bg/.test(error.message)) {
-    const { desktop: _d, hero_bg: _b, ...rest } = record;
+  if (error && /desktop|hero_bg|sticker/.test(error.message)) {
+    const { desktop: _d, hero_bg: _b, sticker: _k, ...rest } = record;
     ({ error } = await write(rest));
-    missingDesktop = !error && (desktop.length > 0 || !!record.hero_bg);
+    missingDesktop = !error && (desktop.length > 0 || !!record.hero_bg || !!record.sticker);
   }
   if (error && /template|scroll/.test(error.message)) {
-    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, ...rest } = record;
+    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, sticker: _k, ...rest } = record;
     ({ error } = await write(rest));
   }
 
@@ -72,7 +76,7 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   revalidatePath("/");
   revalidatePath(`/proyectos/${record.slug}`);
   if (missingDesktop) {
-    return { error: "Se guardó el proyecto, pero no las capturas de escritorio ni el fondo de portada: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase y guarda otra vez." };
+    return { error: "Se guardó el proyecto, pero no las capturas de escritorio, el fondo de portada ni el sticker: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase y guarda otra vez." };
   }
   redirect(`/admin?cat=${category}`);
 }

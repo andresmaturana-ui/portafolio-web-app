@@ -3,7 +3,8 @@
 import { useActionState, useState } from "react";
 import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
-import { CATEGORIES, DEFAULT_TEMPLATE, TEMPLATES, type Category, type Project } from "@/lib/types";
+import { StickerBadge } from "@/components/StickerBadge";
+import { CATEGORIES, DEFAULT_TEMPLATE, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
 import { saveProject, type FormState } from "./actions";
 
 const IMAGE_HINTS: Record<Category, string> = {
@@ -21,6 +22,8 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   );
   const [desktop, setDesktop] = useState<string[]>(project?.desktop ?? []);
   const [heroBg, setHeroBg] = useState(project?.hero_bg ?? "");
+  const [sticker, setSticker] = useState<Sticker | null>(parseSticker(project?.sticker));
+  const editSticker = (patch: Partial<Sticker>) => setSticker((prev) => (prev ? { ...prev, ...patch } : prev));
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
   const [urlDraft, setUrlDraft] = useState("");
@@ -64,6 +67,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       <input type="hidden" name="images" value={JSON.stringify(images)} />
       <input type="hidden" name="desktop" value={JSON.stringify(desktop)} />
       <input type="hidden" name="hero_bg" value={heroBg} />
+      <input type="hidden" name="sticker" value={sticker ? JSON.stringify(sticker) : ""} />
 
       {state.error && <div className="notice notice--error" role="alert">{state.error}</div>}
 
@@ -245,6 +249,71 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
               multiple
               onChange={(e) => {
                 onFiles(e.target.files, (url) => setDesktop((prev) => [...prev, url]));
+                e.target.value = "";
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {category !== "foto" && (
+        <div className="uploader">
+          <div className="field">
+            <span className="label">Logo como sticker (opcional)</span>
+            <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
+              Si el proyecto tiene logo, súbelo (mejor PNG o SVG con fondo transparente). Aparece como un sticker circular pegado en la página del proyecto y en la
+              portada líquida.
+            </span>
+          </div>
+          {sticker && (
+            <div className="sticker-admin">
+              <StickerBadge sticker={sticker} />
+              <div className="field" style={{ flex: 1, minWidth: 240 }}>
+                <span className="label">Tamaño</span>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {STICKER_SIZES.map((o) => (
+                    <button key={o.value} type="button" className={`btn ${sticker.size === o.value ? "" : "btn--ghost"}`} onClick={() => editSticker({ size: o.value })}>
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                <span className="label">Color</span>
+                <div className="sticker-colors">
+                  {STICKER_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`sticker-swatch ${sticker.color === c ? "is-on" : ""}`}
+                      style={{ background: c }}
+                      onClick={() => editSticker({ color: c })}
+                      aria-label={`Color ${c}`}
+                    />
+                  ))}
+                  <input type="color" value={sticker.color} onChange={(e) => editSticker({ color: e.target.value })} aria-label="Otro color" />
+                </div>
+                <span className="label">Estilo</span>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {(["pegado", "despegado"] as const).map((v) => (
+                    <button key={v} type="button" className={`btn ${sticker.style === v ? "" : "btn--ghost"}`} onClick={() => editSticker({ style: v })}>
+                      {v === "pegado" ? "Pegado" : "Medio despegado"}
+                    </button>
+                  ))}
+                  <button type="button" className="btn btn--danger" onClick={() => setSticker(null)}>
+                    Quitar sticker
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="field">
+            <label htmlFor="sticker-file">{sticker ? "Cambiar logo" : "Subir logo"}</label>
+            <input
+              className="input"
+              id="sticker-file"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                onFiles(e.target.files, (url) => setSticker((prev) => ({ size: "m", color: STICKER_COLORS[0], style: "pegado", ...prev, src: url })));
                 e.target.value = "";
               }}
             />
