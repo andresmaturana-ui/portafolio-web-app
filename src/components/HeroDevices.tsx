@@ -17,6 +17,8 @@ export type HeroItem = {
   screens?: string[];
   /* Apps con versión escritorio: su primera captura de escritorio */
   desktop?: string;
+  /* Fondo de la portada líquida (si no hay, se usa la portada del proyecto) */
+  bg?: string;
 };
 
 // Dónde va el proyecto según el scroll dentro de la sección. Cada uno tiene su tramo: primero queda al
@@ -53,14 +55,14 @@ function Caption({ item, index, total }: { item?: HeroItem; index: number; total
 
 // Portada "Web · App · Diseño": los proyectos pasan uno por uno con la transición elegida en Ajustes.
 // El scroll dentro de la sección decide cuál queda al centro; al subir vuelven atrás.
-export function HeroDevices({ items, fx = "giro", auto = true }: { items: HeroItem[]; fx?: HeroFx; auto?: boolean }) {
+export function HeroDevices({ items, fx = "giro", auto = true, bg = true, phones = 5 }: { items: HeroItem[]; fx?: HeroFx; auto?: boolean; bg?: boolean; phones?: 3 | 5 }) {
   const liquid = fx === "liquida" || fx === "liquida-fuerte";
   // Sin WebGL (o si una imagen no se deja dibujar) la líquida pasa a carrusel.
   const [fallback, setFallback] = useState(false);
   useEffect(() => {
     if (liquid && !liquidSupported()) setFallback(true);
   }, [liquid]);
-  if (liquid && !fallback) return <HeroLiquid items={items} auto={auto} strength={fx === "liquida-fuerte" ? 0.5 : 0.22} onFail={() => setFallback(true)} />;
+  if (liquid && !fallback) return <HeroLiquid items={items} auto={auto} bg={bg} phones={phones} strength={fx === "liquida-fuerte" ? 0.5 : 0.22} onFail={() => setFallback(true)} />;
   return <HeroFlow items={items} spin={fx === "giro"} />;
 }
 
@@ -160,10 +162,10 @@ type Frame = { device: Device; cx: number; cy: number; w: number; h: number; rot
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
-function sceneFrames(it: HeroItem, W: number, H: number, t: number): Frame[] {
+function sceneFrames(it: HeroItem, W: number, H: number, t: number, phones: 3 | 5): Frame[] {
   const mobile = W < 760;
   const shots = it.screens?.length ? it.screens : [it.src];
-  const pick = (k: number) => shots[k] ?? shots[0];
+  const pick = (k: number) => shots[k] ?? shots[k % shots.length];
   const cy = H * (mobile ? 0.42 : 0.45);
   if (it.kind === "app" && it.desktop) {
     // Ecosistema: la versión escritorio al centro y la app en dos celulares a los lados.
@@ -194,21 +196,35 @@ function sceneFrames(it: HeroItem, W: number, H: number, t: number): Frame[] {
       { device: "phone", cx: mobile ? W * 0.24 : dx - dw / 2 - ph * 0.02, cy: dy + dh * (mobile ? 0.7 : 0.22), w: ph * (9 / 19.5), h: ph, rot: 0, src: pick(0), focus },
     ];
   }
-  // Apps y diseño: tres piezas, la del centro adelante y las de los lados un poco giradas.
+  // Apps: cinco celulares en el computador (tres en el celular); diseño: tres afiches. El del centro va adelante
+  // y los de los lados, más chicos y un poco girados.
   const poster = it.kind === "diseno";
   const h = poster ? Math.min(H * (mobile ? 0.36 : 0.52), 540) : Math.min(H * (mobile ? 0.5 : 0.62), 660);
   const w = poster ? h * 0.75 : h * (9 / 19.5);
-  const gap = mobile ? W * 0.33 : Math.min(W * 0.27, w * 2.1);
+  const five = !poster && !mobile && phones === 5;
+  const gap = mobile ? W * 0.33 : five ? Math.min(W * 0.19, w * 1.5) : Math.min(W * 0.27, w * 2.1);
   const horizontal = it.kind === "app" && it.scroll === "horizontal";
-  // Con una sola captura, cada celular muestra otra parte: si es horizontal, pantallas seguidas; si es vertical, otra altura.
+  // Con pocas capturas, cada celular muestra otra parte: si es horizontal, pantallas seguidas; si es vertical, otra altura.
   const focus = (k: number): [number, number] =>
-    poster ? [0.5, 0.5] : horizontal ? [clamp01(t * 0.4 + k * 0.3), 0.5] : shots[k] ? [0.5, t] : [0.5, clamp01(t * 0.5 + (k === 1 ? 0.5 : 0.25))];
-  const side = mobile ? 0.8 : 0.9;
-  return [
-    { device: poster ? "poster" : "phone", cx: W / 2 - gap, cy: cy + h * 0.04, w: w * side, h: h * side, rot: -0.07, src: pick(1), focus: focus(1) },
-    { device: poster ? "poster" : "phone", cx: W / 2 + gap, cy: cy + h * 0.04, w: w * side, h: h * side, rot: 0.07, src: pick(2), focus: focus(2) },
-    { device: poster ? "poster" : "phone", cx: W / 2, cy, w, h, rot: 0, src: pick(0), focus: horizontal ? focus(0) : [0.5, t] },
-  ];
+    poster ? [0.5, 0.5] : horizontal ? [clamp01(t * 0.4 + k * 0.15), 0.5] : shots[k] ? [0.5, t] : [0.5, clamp01(t * 0.5 + ((k * 0.23) % 0.5))];
+  // Lugar (de -2 a 2) → captura: el centro lleva la portada; luego los de al lado y los de las puntas.
+  const slots = five ? [-2, 2, -1, 1, 0] : [-1, 1, 0];
+  const shotFor = (pos: number) => (pos === 0 ? 0 : pos === -1 ? 1 : pos === 1 ? 2 : pos === -2 ? 3 : 4);
+  return slots.map((pos) => {
+    const a = Math.abs(pos);
+    const scale = a === 0 ? 1 : a === 1 ? (mobile ? 0.8 : 0.88) : 0.76;
+    const k = shotFor(pos);
+    return {
+      device: poster ? "poster" : "phone",
+      cx: W / 2 + pos * gap,
+      cy: cy + h * 0.035 * a,
+      w: w * scale,
+      h: h * scale,
+      rot: pos * 0.055,
+      src: pick(k),
+      focus: pos === 0 && !horizontal ? [0.5, t] : focus(k),
+    } satisfies Frame;
+  });
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number | number[]) {
@@ -233,6 +249,32 @@ function cover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, 
     sy = (ih - sh) * focus[1];
   }
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+// Fondo: una imagen de la app que llena toda la portada, muy desenfocada (se achica y se vuelve a agrandar,
+// que funciona en todos los navegadores) y oscurecida, con los bordes fundidos con el color de la página.
+const blurCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
+function drawBackground(ctx: CanvasRenderingContext2D, img: HTMLImageElement, W: number, H: number, bg: string) {
+  if (blurCanvas) {
+    const bw = 40;
+    const bh = Math.max(1, Math.round((bw * H) / W));
+    blurCanvas.width = bw;
+    blurCanvas.height = bh;
+    const b = blurCanvas.getContext("2d")!;
+    cover(b, img, 0, 0, bw, bh, [0.5, 0.3]);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(blurCanvas, 0, 0, bw, bh, -W * 0.05, -H * 0.05, W * 1.1, H * 1.1);
+  }
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(0, 0, W, H);
+  const fade = ctx.createLinearGradient(0, 0, 0, H);
+  fade.addColorStop(0, bg);
+  fade.addColorStop(0.16, "rgba(0,0,0,0)");
+  fade.addColorStop(0.7, "rgba(0,0,0,0)");
+  fade.addColorStop(1, bg);
+  ctx.fillStyle = fade;
+  ctx.fillRect(0, 0, W, H);
 }
 
 function drawFrame(ctx: CanvasRenderingContext2D, f: Frame, img: HTMLImageElement | null) {
@@ -299,7 +341,7 @@ function drawFrame(ctx: CanvasRenderingContext2D, f: Frame, img: HTMLImageElemen
 const LIQUID_HOLD = 3.6;
 const LIQUID_MOVE = 1.3;
 
-function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto: boolean; strength: number; onFail: () => void }) {
+function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: HeroItem[]; auto: boolean; bg: boolean; phones: 3 | 5; strength: number; onFail: () => void }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [current, setCurrent] = useState(0);
@@ -336,7 +378,9 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
     };
     const loaded = (img: HTMLImageElement) => img.complete && img.naturalWidth > 0;
     // Lista para mostrar: todas sus capturas cargaron (o fallaron).
-    const ready = (i: number) => [items[i].src, ...(items[i].screens ?? []), ...(items[i].desktop ? [items[i].desktop!] : [])].every((src) => getImg(src).complete);
+    const ready = (i: number) =>
+      [items[i].src, ...(items[i].screens ?? []), items[i].desktop, bg ? items[i].bg : undefined].every((src) => !src || getImg(src).complete);
+    const pageBg = getComputedStyle(el).getPropertyValue("--bg").trim() || "#07080a";
     const load = (i: number) => {
       i = ((i % n) + n) % n;
       ready(i);
@@ -348,9 +392,10 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
       const { width, height, dpr } = liquid.size();
       const W = cv.clientWidth;
       const H = cv.clientHeight;
-      const frames = sceneFrames(it, W, H, Math.round(t * 500) / 500);
+      const frames = sceneFrames(it, W, H, Math.round(t * 500) / 500, phones);
       const imgsFor = frames.map((f) => getImg(f.src));
-      const key = `${i}|${frames.map((f) => f.focus.join(",")).join(";")}|${width}x${height}|${imgsFor.filter(loaded).length}`;
+      const back = bg ? getImg(it.bg || it.src) : null;
+      const key = `${i}|${frames.map((f) => f.focus.join(",")).join(";")}|${width}x${height}|${imgsFor.filter(loaded).length}|${back ? loaded(back) : "-"}`;
       const s = slots[slot];
       if (s.key === key) return null;
       s.key = key;
@@ -362,6 +407,7 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, width, height);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (back && loaded(back)) drawBackground(ctx, back, W, H, pageBg);
       frames.forEach((f, k) => drawFrame(ctx, f, loaded(imgsFor[k]) ? imgsFor[k] : null));
       return s.canvas;
     };
@@ -535,7 +581,7 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
     };
     // onFail cambia en cada render del padre; no hace falta volver a montar por eso.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, strength, auto]);
+  }, [items, strength, auto, bg, phones]);
 
   const active = items[current];
   return (

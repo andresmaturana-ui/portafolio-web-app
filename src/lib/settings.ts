@@ -72,25 +72,31 @@ export const HERO_FXS: { value: HeroFx; label: string; hint: string }[] = [
   { value: "liquida-fuerte", label: "Líquida psicodélica", hint: "La misma, pero con más distorsión y colores girando." },
 ];
 
+// Todo lo de la portada que va en hero_media (JSON):
 // picks: proyectos elegidos para la portada Web · App · Diseño (null = todos).
-type HeroData = { slides: HeroSlide[]; look: HeroLook; picks: string[] | null; fx: HeroFx; auto: boolean };
+// auto: la transición líquida pasa sola (true) o avanza con el scroll (false).
+// bg: en la líquida, una imagen del proyecto llena el fondo, desenfocada. phones: celulares por app en la líquida (3 o 5).
+export type HeroData = { slides: HeroSlide[]; look: HeroLook; picks: string[] | null; fx: HeroFx; auto: boolean; bg: boolean; phones: 3 | 5 };
+export const DEFAULT_HERO: HeroData = { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true, bg: true, phones: 5 };
 
-// hero_media guarda JSON: { slides, look }. Versiones anteriores: un arreglo de fotos o una URL por línea.
+// hero_media guarda JSON con HeroData. Versiones anteriores: un arreglo de fotos o una URL por línea.
 function parseHero(raw: string | null): HeroData {
   const text = (raw ?? "").trim();
   const clean = (list: unknown): HeroSlide[] =>
     Array.isArray(list) ? list.filter((x) => x && typeof x.src === "string" && x.src) : [];
-  if (!text) return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
+  if (!text) return DEFAULT_HERO;
   if (text.startsWith("[") || text.startsWith("{")) {
     try {
       const data = JSON.parse(text);
-      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
+      if (Array.isArray(data)) return { ...DEFAULT_HERO, slides: clean(data) };
       const look = data.look ?? {};
       return {
         slides: clean(data.slides),
         picks: Array.isArray(data.picks) ? data.picks.filter((x: unknown) => typeof x === "string") : null,
         fx: HERO_FXS.some((f) => f.value === data.fx) ? data.fx : "giro",
         auto: data.auto !== false,
+        bg: data.bg !== false,
+        phones: data.phones === 3 ? 3 : 5,
         look: {
           filter: HERO_FILTERS.some((f) => f.value === look.filter) ? look.filter : "none",
           tint: isHex(look.tint) ? look.tint : DEFAULT_LOOK.tint,
@@ -98,20 +104,17 @@ function parseHero(raw: string | null): HeroData {
         },
       };
     } catch {
-      return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
+      return DEFAULT_HERO;
     }
   }
-  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
+  return { ...DEFAULT_HERO, slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src) };
 }
 
+export const heroData = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media);
 export const heroSlides = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).slides;
 export const heroLook = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).look;
 export const heroPicks = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).picks;
-export const heroFx = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).fx;
-// auto: la transición líquida pasa sola (true) o avanza con el scroll (false).
-export const heroAuto = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).auto;
-export const serializeHero = (slides: HeroSlide[], look: HeroLook, picks: string[] | null = null, fx: HeroFx = "giro", auto = true) =>
-  slides.length || picks || fx !== "giro" || !auto ? JSON.stringify({ slides, look, picks, fx, auto }) : null;
+export const serializeHero = (d: HeroData) => (JSON.stringify(d) === JSON.stringify(DEFAULT_HERO) ? null : JSON.stringify(d));
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },

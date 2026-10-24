@@ -4,7 +4,7 @@ import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroDevices, type HeroItem } from "@/components/HeroDevices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { getSettings } from "@/lib/get-settings";
-import { heroAuto, heroFx, heroLook, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
+import { heroData, heroLook, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
 import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
@@ -13,6 +13,8 @@ import type { Project } from "@/lib/types";
 export const revalidate = 60;
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
+
+const pickHero = ({ fx, auto, bg, phones }: ReturnType<typeof heroData>) => ({ fx, auto, bg, phones });
 
 export default async function Home() {
   const projects = await getPublishedProjects();
@@ -38,13 +40,14 @@ export default async function Home() {
       scroll: p.scroll === "horizontal" ? ("horizontal" as const) : ("vertical" as const),
       screens: [p.cover_url, ...p.gallery].filter(Boolean) as string[],
       desktop: id === "app" ? p.desktop?.[0] || undefined : undefined,
+      bg: p.hero_bg || undefined,
     }));
 
   // Sin imagen o video subido (o sin proyectos para la portada Web · App · Diseño), la portada vuelve al logo.
   const hero =
     settings.hero_type === "dispositivos" ? (heroItems.length ? "dispositivos" : "logo") : settings.hero_media && settings.hero_type !== "logo" ? settings.hero_type : "logo";
   // Con más fotos la portada dura más scroll, para que cada una alcance a verse.
-  const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : hero === "dispositivos" ? (heroFx(settings).startsWith("liquida") && heroAuto(settings) ? 1800 : Math.max(2400, 1400 + heroItems.length * 520)) : Math.max(2400, 1200 + heroSlides(settings).length * 450);
+  const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : hero === "dispositivos" ? (heroData(settings).fx.startsWith("liquida") && heroData(settings).auto ? 1800 : Math.max(2400, 1400 + heroItems.length * 520)) : Math.max(2400, 1200 + heroSlides(settings).length * 450);
 
   let n = 0;
   const next = () => pad2(++n);
@@ -184,7 +187,7 @@ export default async function Home() {
             )}
             {hero === "video" && <HeroVideo src={settings.hero_media!} />}
             {hero === "dispositivos" && (
-              <HeroDevices items={heroItems} fx={heroFx(settings)} auto={heroAuto(settings)} />
+              <HeroDevices items={heroItems} {...pickHero(heroData(settings))} />
             )}
             {(hero === "imagen" || hero === "video") && <div className="hero-shade" aria-hidden="true" />}
             <div className="hero-copy">

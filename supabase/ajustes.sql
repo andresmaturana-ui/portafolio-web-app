@@ -75,3 +75,5 @@ create policy "mensajes admins borran" on public.portfolio_messages
 -- Capturas de la versión escritorio de una app (para mostrar el ecosistema celular + escritorio).
 -- No cambia los proyectos que ya subiste.
 alter table public.portfolio_projects add column if not exists desktop text[] not null default '{}';
+-- Imagen de fondo del proyecto en la portada líquida (vacía = su portada)
+alter table public.portfolio_projects add column if not exists hero_bg text;

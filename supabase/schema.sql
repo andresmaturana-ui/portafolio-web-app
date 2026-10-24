@@ -50,6 +50,8 @@ alter table public.portfolio_projects add column if not exists template text;
 alter table public.portfolio_projects add column if not exists scroll text not null default 'vertical';
 -- Capturas de la versión escritorio de una app (para mostrar el ecosistema celular + escritorio)
 alter table public.portfolio_projects add column if not exists desktop text[] not null default '{}';
+-- Imagen de fondo del proyecto en la portada líquida (vacía = su portada)
+alter table public.portfolio_projects add column if not exists hero_bg text;
 
 create index if not exists portfolio_projects_category_idx
   on public.portfolio_projects (category, sort);

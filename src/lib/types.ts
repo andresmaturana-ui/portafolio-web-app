@@ -26,6 +26,8 @@ export type Project = {
   scroll?: "vertical" | "horizontal" | null;
   /* Apps con versión escritorio: sus capturas, para mostrar el ecosistema completo */
   desktop?: string[] | null;
+  /* Imagen de fondo para la portada líquida (vacía = la portada del proyecto) */
+  hero_bg?: string | null;
   created_at?: string;
 };
 

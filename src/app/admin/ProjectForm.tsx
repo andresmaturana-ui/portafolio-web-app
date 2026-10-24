@@ -20,6 +20,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
     project ? ([project.cover_url, ...project.gallery].filter(Boolean) as string[]) : [],
   );
   const [desktop, setDesktop] = useState<string[]>(project?.desktop ?? []);
+  const [heroBg, setHeroBg] = useState(project?.hero_bg ?? "");
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
   const [urlDraft, setUrlDraft] = useState("");
@@ -62,6 +63,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       {project && <input type="hidden" name="id" value={project.id} />}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
       <input type="hidden" name="desktop" value={JSON.stringify(desktop)} />
+      <input type="hidden" name="hero_bg" value={heroBg} />
 
       {state.error && <div className="notice notice--error" role="alert">{state.error}</div>}
 
@@ -243,6 +245,43 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
               multiple
               onChange={(e) => {
                 onFiles(e.target.files, (url) => setDesktop((prev) => [...prev, url]));
+                e.target.value = "";
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {category !== "foto" && (
+        <div className="uploader">
+          <div className="field">
+            <span className="label">Fondo en la portada (opcional)</span>
+            <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
+              Imagen que llena todo el fondo de la portada líquida, desenfocada y oscurecida, detrás de los aparatos. Si no subes una, se usa la portada del
+              proyecto.
+            </span>
+          </div>
+          {heroBg && (
+            <div className="thumbs">
+              <div className="thumb thumb--wide">
+                <img src={heroBg} alt="Fondo de la portada" />
+                <div className="thumb-actions">
+                  <button type="button" onClick={() => setHeroBg("")} aria-label="Quitar fondo">
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="field">
+            <label htmlFor="bg-file">{heroBg ? "Cambiar fondo" : "Subir fondo"}</label>
+            <input
+              className="input"
+              id="bg-file"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                onFiles(e.target.files, (url) => setHeroBg(url));
                 e.target.value = "";
               }}
             />
