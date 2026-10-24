@@ -25,6 +25,8 @@ export default async function Home() {
   // Con más fotos la portada dura más scroll, para que cada una alcance a verse.
   const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : Math.max(2400, 1200 + heroSlides(settings).length * 450);
 
+  const visibleSections = settings.section_order.filter((id) => !settings.sections_hidden.includes(id));
+
   let n = 0;
   const next = () => pad2(++n);
 
@@ -112,7 +114,7 @@ export default async function Home() {
           </span>
         </a>
         <nav className="site-nav" aria-label="Secciones">
-          {settings.section_order.map((id) => {
+          {visibleSections.map((id) => {
             if (id === "app") return apps.length > 0 && <a key={id} className="mono" href="#apps">Apps</a>;
             if (id === "web") return webs.length > 0 && <a key={id} className="mono hide-sm" href="#web">Web</a>;
             if (id === "foto") return <a key={id} className="mono" href="#foto">Fotografía</a>;
@@ -164,7 +166,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {settings.section_order.map((id) => (
+        {visibleSections.map((id) => (
           <Fragment key={id}>{sections[id]()}</Fragment>
         ))}
 

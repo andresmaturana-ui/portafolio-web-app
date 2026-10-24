@@ -525,3 +525,7 @@ img { display: block; max-width: 100%; }
 .order-actions { margin-left: auto; display: flex; gap: 6px; }
 .order-actions .btn { min-height: 40px; min-width: 44px; padding: 6px 12px; }
 .order-actions .btn:disabled { opacity: 0.35; cursor: default; }
+.order-item.is-off { opacity: 0.55; }
+.order-item.is-off strong { text-decoration: line-through; }
+.switch { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 8px; cursor: pointer; }
+.switch input { width: 20px; height: 20px; accent-color: var(--accent); }

@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supabase/config";
-import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseSectionOrder, SETTINGS_TABLE, type Settings } from "@/lib/settings";
+import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseHiddenSections, parseSectionOrder, SETTINGS_TABLE, type Settings } from "@/lib/settings";
 
 // Lee los ajustes guardados; si falta la tabla o Supabase, usa los de fábrica.
 export async function getSettings(): Promise<Settings> {
@@ -23,6 +23,7 @@ export async function getSettings(): Promise<Settings> {
       contact_email: data.contact_email || null,
       contact_phone: data.contact_phone || null,
       section_order: parseSectionOrder(data.section_order),
+      sections_hidden: parseHiddenSections(data.section_order),
     };
   } catch {
     return DEFAULT_SETTINGS;

@@ -14,6 +14,7 @@ export type Settings = {
   contact_email: string | null;
   contact_phone: string | null;
   section_order: SectionId[];
+  sections_hidden: SectionId[];
 };
 
 // Orden de las secciones de trabajos en la página de inicio.
@@ -24,15 +25,25 @@ export const SECTIONS: { value: SectionId; label: string }[] = [
   { value: "foto", label: "Fotografía" },
   { value: "diseno", label: "Diseño" },
 ];
+// Se guarda como texto, p. ej. "app,!web,foto,diseno": el "!" marca una sección apagada.
 export function parseSectionOrder(raw: unknown): SectionId[] {
   const ids = SECTIONS.map((s) => s.value);
   const given = String(raw ?? "")
     .split(",")
-    .map((x) => x.trim())
+    .map((x) => x.trim().replace(/^!/, ""))
     .filter((x): x is SectionId => ids.includes(x as SectionId));
   const unique = [...new Set(given)];
   return [...unique, ...ids.filter((id) => !unique.includes(id))];
 }
+export const parseHiddenSections = (raw: unknown): SectionId[] =>
+  String(raw ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter((x) => x.startsWith("!"))
+    .map((x) => x.slice(1))
+    .filter((x): x is SectionId => SECTIONS.some((s) => s.value === x));
+export const serializeSections = (order: SectionId[], hidden: SectionId[]) =>
+  order.map((id) => (hidden.includes(id) ? `!${id}` : id)).join(",");
 
 export type HeroType = "logo" | "imagen" | "video";
 export type HeroDir = "ltr" | "rtl";
@@ -103,6 +114,7 @@ export const DEFAULT_SETTINGS: Settings = {
   contact_email: null,
   contact_phone: null,
   section_order: ["app", "web", "foto", "diseno"],
+  sections_hidden: [],
 };
 
 // Link de WhatsApp a partir del teléfono (solo dígitos, con código de país).

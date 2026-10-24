@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { slugify } from "@/lib/projects";
-import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseSectionOrder, SETTINGS_TABLE, type Settings } from "@/lib/settings";
+import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseHiddenSections, parseSectionOrder, SETTINGS_TABLE, serializeSections, type Settings } from "@/lib/settings";
 import { MESSAGES_TABLE, TABLE } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, type Category } from "@/lib/types";
@@ -103,7 +103,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
     hero_dir: pick("hero_dir", ["ltr", "rtl"], "ltr"),
     contact_email: String(formData.get("contact_email") ?? "").trim() || null,
     contact_phone: String(formData.get("contact_phone") ?? "").trim() || null,
-    section_order: parseSectionOrder(formData.get("section_order")).join(","),
+    section_order: serializeSections(parseSectionOrder(formData.get("section_order")), parseHiddenSections(formData.get("section_order"))),
     updated_at: new Date().toISOString(),
   };
   let { error } = await supabase.from(SETTINGS_TABLE).upsert(record);

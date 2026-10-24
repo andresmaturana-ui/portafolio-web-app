@@ -11,6 +11,7 @@ import {
   MONO_FONTS,
   PALETTES,
   SECTIONS,
+  serializeSections,
   serializeHero,
   settingsStyle,
   type HeroLook,
@@ -121,14 +122,24 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
       <input type="hidden" name="hero_media" value={s.hero_type === "logo" ? "" : (s.hero_media ?? "")} />
 
       <section className="settings-block">
-        <h2 className="settings-h">Orden de las secciones</h2>
-        <input type="hidden" name="section_order" value={s.section_order.join(",")} />
+        <h2 className="settings-h">Secciones</h2>
+        <input type="hidden" name="section_order" value={serializeSections(s.section_order, s.sections_hidden)} />
         <ol className="order-list">
           {s.section_order.map((id, i) => (
-            <li key={id} className="order-item">
+            <li key={id} className={`order-item ${s.sections_hidden.includes(id) ? "is-off" : ""}`}>
               <span className="mono order-n">{String(i + 1).padStart(2, "0")}</span>
               <strong>{SECTIONS.find((x) => x.value === id)?.label}</strong>
               <span className="order-actions">
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={!s.sections_hidden.includes(id)}
+                    onChange={(e) =>
+                      set("sections_hidden", e.target.checked ? s.sections_hidden.filter((x) => x !== id) : [...s.sections_hidden, id])
+                    }
+                  />
+                  <span className="mono">{s.sections_hidden.includes(id) ? "Oculta" : "Visible"}</span>
+                </label>
                 <button type="button" className="btn btn--ghost" disabled={i === 0} onClick={() => moveSection(i, i - 1)} aria-label="Subir">
                   ↑
                 </button>
@@ -139,7 +150,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
             </li>
           ))}
         </ol>
-        <span className="label">Así aparecen en la página de inicio y en el menú, después de la portada. Contacto siempre va al final.</span>
+        <span className="label">Ordénalas con las flechas y apaga las que no quieras mostrar: desaparecen del inicio y del menú (sus proyectos no se borran). Contacto siempre va al final.</span>
       </section>
 
       <section className="settings-block">
