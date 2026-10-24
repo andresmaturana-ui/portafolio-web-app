@@ -106,8 +106,9 @@ img { display: block; max-width: 100%; }
   position: absolute; top: -28px; left: 0; padding: 4px 10px; border-radius: 999px;
   color: var(--accent-ink); background: var(--accent); font-size: 10px; letter-spacing: 0.16em;
 }
-.hd-web { left: 4vw; top: 22%; width: min(560px, 44vw); z-index: 1; }
-.hd-web .browser { position: relative; top: 0; width: 100%; }
+.hero-devices { display: flex; align-items: center; justify-content: center; perspective: 1200px; }
+.hd-back { position: absolute; inset: 0; display: flex; justify-content: center; opacity: 0.55; filter: saturate(0.8); }
+.hd-back .browser { top: 14%; }
 .hd-design { right: 6vw; top: 20%; z-index: 1; }
 .hd-poster {
   width: clamp(110px, 14vw, 220px); aspect-ratio: 3 / 4; border-radius: 6px; overflow: hidden;
@@ -115,28 +116,8 @@ img { display: block; max-width: 100%; }
 }
 .hd-poster img { width: 100%; height: 100%; object-fit: cover; }
 .hd-poster-fill { display: grid; place-items: center; height: 100%; background: var(--accent); color: var(--accent-ink); font-size: clamp(40px, 6vw, 96px); font-weight: 700; }
-/* Anillo de celulares en 3D */
-.hd-orbit {
-  --pw: clamp(110px, 12vw, 190px);
-  position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 3;
-  perspective: 1600px; perspective-origin: 50% 30%;
-}
-.hd-ring { position: absolute; left: 0; top: 0; transform-style: preserve-3d; transform: rotateX(-8deg); }
-.hd-slot {
-  position: absolute; left: calc(var(--pw) / -2); top: calc(var(--pw) * -1.08);
-  transform: rotateY(calc(var(--i) * 360deg / var(--n))) translateZ(calc(var(--pw) * var(--n) * 0.24));
-}
-.hd-slot .phone { width: var(--pw); box-shadow: 0 0 40px color-mix(in srgb, var(--accent) 18%, transparent); }
-.hd-base {
-  position: absolute; left: calc(var(--pw) * -2.6); top: calc(var(--pw) * 0.95); width: calc(var(--pw) * 5.2); height: calc(var(--pw) * 1.1);
-  border-radius: 50%; border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
-  box-shadow: 0 0 60px color-mix(in srgb, var(--accent) 35%, transparent), inset 0 0 40px color-mix(in srgb, var(--accent) 25%, transparent);
-}
-.hd-tag--app { left: -24px; top: calc(var(--pw) * -1.5); }
 @media (max-width: 760px) {
-  .hd-web { left: 4vw; top: 12%; width: 52vw; }
-  .hd-design { right: 4vw; top: 14%; }
-  .hd-orbit { --pw: 84px; top: 56%; }
+  .hd-design { right: 4vw; top: 12%; }
 }
 
 .hero-title { margin: 0; font-size: clamp(36px, 7vw, 104px); font-weight: 700; letter-spacing: -0.02em; line-height: 0.95; }
@@ -289,11 +270,8 @@ img { display: block; max-width: 100%; }
   .k-h1 { animation-name: kH1; }
   .k-h1-media { animation-name: kH1Media; }
   .k-h1-early { animation-name: kH1Early; }
-  .k-hd-web { animation-name: kHdWeb; }
   .k-hd-app { animation-name: kHdApp; }
   .k-hd-design { animation-name: kHdDesign; }
-  .k-hd-orbit { animation-name: kHdOrbit; }
-  .k-hd-spin { animation-name: kHdSpin; }
   .k-pan-ltr { animation-name: kPanLtr; }
   .k-pan-rtl { animation-name: kPanRtl; }
   .k-txt { animation-name: kTxt; }
@@ -320,18 +298,7 @@ img { display: block; max-width: 100%; }
     0%, 35% { opacity: 0; letter-spacing: 0.6em; filter: blur(8px); }
     70%, 100% { opacity: 1; letter-spacing: -0.02em; filter: blur(0); }
   }
-  /* El anillo de celulares crece y da una vuelta completa con el scroll; web y diseño entran por los lados. */
-  @keyframes kHdOrbit {
-    0% { transform: scale(0.35); opacity: 0; }
-    25%, 80% { transform: none; opacity: 1; }
-    100% { transform: scale(1.25) translateY(-8vh); opacity: 0.3; }
-  }
-  @keyframes kHdSpin { from { transform: rotateX(-8deg) rotateY(0deg); } to { transform: rotateX(-8deg) rotateY(-360deg); } }
-  @keyframes kHdWeb {
-    0%, 10% { transform: translateX(-60vw) rotateY(35deg); opacity: 0; }
-    45%, 80% { transform: rotateY(18deg); opacity: 0.9; }
-    100% { transform: translateX(-12vw) rotateY(30deg); opacity: 0.2; }
-  }
+  /* El afiche de diseño entra por la derecha mientras se abren los celulares. */
   @keyframes kHdDesign {
     0%, 15% { transform: translateX(50vw) rotate(18deg); opacity: 0; }
     50%, 80% { transform: rotate(6deg); opacity: 0.95; }
