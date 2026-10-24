@@ -626,3 +626,6 @@ img { display: block; max-width: 100%; }
 .hd-liquid { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hd-hit { position: absolute; left: 50%; top: 44%; width: min(46vw, 680px); height: 56vh; translate: -50% -50%; z-index: 110; border-radius: 18px; }
 .hd-hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 8px; }
+/* Líquida que pasa sola: se puede pasar de lado con el dedo; el scroll vertical sigue funcionando */
+.hero-devices--swipe { touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+.hero-devices--swipe:active { cursor: grabbing; }

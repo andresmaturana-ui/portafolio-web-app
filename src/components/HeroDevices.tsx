@@ -222,8 +222,14 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
     };
 
     // Reloj propio: solo avanza mientras la portada se ve y la imagen siguiente ya cargó.
-    let index = 0;
-    let clock = 0;
+    // pos es la pantalla a la vista (con decimales mientras se derrite); settled, la última en la que se detuvo.
+    const wrap = (i: number) => ((i % n) + n) % n;
+    let pos = 0;
+    let settled = 0;
+    let timer = 0;
+    let tween: { from: number; to: number; start: number; dur: number } | null = null;
+    let drag: { x0: number; y0: number; pos0: number; moved: boolean } | null = null;
+    let suppressClick = false;
     let last = 0;
     let visible = true;
     let frame = 0;
@@ -231,43 +237,59 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
     const mouse: [number, number] = [-9999, -9999];
     const target: [number, number] = [-9999, -9999];
     let hover = 0;
+    const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
 
     const render = (now: number) => {
       frame = 0;
       if (dead) return;
       const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
       last = now;
+      let index: number;
       let next: number;
       let mix: number;
-      let t: number;
+      let tA = 0;
+      let tB = 0;
       if (auto) {
-        next = (index + 1) % n;
-        if (n > 1 && ready(index) && ready(next)) clock += dt;
-        if (clock >= LIQUID_HOLD + LIQUID_MOVE) {
-          clock -= LIQUID_HOLD + LIQUID_MOVE;
-          index = next;
-          next = (index + 1) % n;
+        if (drag) {
+          // pos lo mueve el dedo.
+        } else if (tween) {
+          const x = Math.min(1, (now - tween.start) / tween.dur);
+          pos = tween.from + (tween.to - tween.from) * ease(x);
+          if (x >= 1) {
+            pos = settled = tween.to;
+            timer = 0;
+            tween = null;
+          }
+        } else {
+          if (n > 1 && ready(wrap(settled)) && ready(wrap(settled + 1))) timer += dt;
+          if (timer >= LIQUID_HOLD) tween = { from: pos, to: settled + 1, start: now, dur: LIQUID_MOVE * 1000 };
         }
-        const x = Math.max(0, (clock - LIQUID_HOLD) / LIQUID_MOVE);
-        mix = x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
-        t = Math.min(1, clock / LIQUID_HOLD);
+        const base = Math.floor(pos);
+        index = wrap(base);
+        next = wrap(base + 1);
+        mix = pos - base;
+        const t = Math.min(1, timer / LIQUID_HOLD);
+        tA = base === settled ? t : 0;
+        tB = base + 1 === settled ? t : 0;
+        setCurrent(wrap(Math.round(pos)));
       } else {
         // Con el scroll: mismos tramos que el carrusel (quieto mientras corre la pantalla, luego se derrite).
         const { f, screenT } = heroProgress(track, n);
         index = Math.floor(f);
         next = Math.min(index + 1, n - 1);
         mix = f - index;
-        t = screenT(index);
+        tA = screenT(index);
+        setCurrent(index);
       }
-      setCurrent(index);
       load(index);
       load(next);
       load(index + 2);
+      load(index - 1);
       mouse[0] += (target[0] - mouse[0]) * 0.18;
       mouse[1] += (target[1] - mouse[1]) * 0.18;
       hover *= 0.965;
-      const a = shot(index, t);
-      const b = shot(next, 0) ?? a;
+      const a = shot(index, tA);
+      const b = shot(next, tB) ?? a;
       if (a && b) {
         try {
           liquid.draw(a, b, mix, now / 1000, mouse, hover);
@@ -300,14 +322,57 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
       target[1] = y - r.top;
       hover = 1;
     };
-    const onPointer = (e: PointerEvent) => point(e.clientX, e.clientY);
+    const onPointer = (e: PointerEvent) => {
+      point(e.clientX, e.clientY);
+      if (!drag) return;
+      const dx = e.clientX - drag.x0;
+      if (!drag.moved && Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(e.clientY - drag.y0)) {
+        drag.moved = true;
+        el.setPointerCapture?.(e.pointerId);
+      }
+      // Arrastrar hacia la izquierda trae la siguiente; hacia la derecha, la anterior.
+      if (drag.moved) pos = drag.pos0 - dx / (cv.clientWidth * 0.5);
+    };
+    // Pasar con el dedo (o arrastrando el mouse) de lado: solo cuando las pantallas pasan solas.
+    const onDown = (e: PointerEvent) => {
+      point(e.clientX, e.clientY);
+      if (!auto || n < 2 || (e.pointerType === "mouse" && e.button !== 0)) return;
+      suppressClick = false;
+      drag = { x0: e.clientX, y0: e.clientY, pos0: pos, moved: false };
+    };
+    const onUp = () => {
+      if (!drag) return;
+      if (drag.moved) {
+        const moved = pos - drag.pos0;
+        const from = Math.round(drag.pos0);
+        const to = moved > 0.12 ? from + 1 : moved < -0.12 ? from - 1 : from;
+        tween = { from: pos, to, start: performance.now(), dur: 250 + Math.abs(to - pos) * 650 };
+        settled = Math.round(drag.pos0);
+        timer = 0;
+        suppressClick = true;
+      }
+      drag = null;
+    };
+    // Si se arrastró, soltar no abre el proyecto.
+    const onClick = (e: MouseEvent) => {
+      if (suppressClick) {
+        e.preventDefault();
+        e.stopPropagation();
+        suppressClick = false;
+      }
+    };
+    const noDrag = (e: Event) => e.preventDefault();
     const onTouch = (e: TouchEvent) => e.touches[0] && point(e.touches[0].clientX, e.touches[0].clientY);
     const onResize = () => {
       liquid.resize();
       start();
     };
     el.addEventListener("pointermove", onPointer);
-    el.addEventListener("pointerdown", onPointer);
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+    el.addEventListener("click", onClick, true);
+    el.addEventListener("dragstart", noDrag);
     el.addEventListener("touchmove", onTouch, { passive: true });
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("resize", onResize);
@@ -316,7 +381,11 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
       dead = true;
       io.disconnect();
       el.removeEventListener("pointermove", onPointer);
-      el.removeEventListener("pointerdown", onPointer);
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+      el.removeEventListener("click", onClick, true);
+      el.removeEventListener("dragstart", noDrag);
       el.removeEventListener("touchmove", onTouch);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
@@ -328,7 +397,7 @@ function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto
 
   const active = items[current];
   return (
-    <div ref={root} className="hero-devices hero-devices--liquid">
+    <div ref={root} className={`hero-devices hero-devices--liquid ${auto ? "hero-devices--swipe" : ""}`}>
       <div className="gridbg anim k-grid" aria-hidden="true" />
       <canvas ref={canvas} className="hd-liquid" aria-hidden="true" />
       {active && <Link href={`/proyectos/${active.slug}`} className="hd-hit" aria-label={active.title} />}
