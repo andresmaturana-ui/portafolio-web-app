@@ -68,28 +68,29 @@ export type HeroFx = "giro" | "carrusel" | "liquida" | "liquida-fuerte";
 export const HERO_FXS: { value: HeroFx; label: string; hint: string }[] = [
   { value: "giro", label: "Giro con luces", hint: "Cada pieza da una vuelta completa al pasar, con luces y líneas de neón." },
   { value: "carrusel", label: "Carrusel 3D", hint: "Pasan de lado en 3D, sin girar ni luces: más sobrio." },
-  { value: "liquida", label: "Líquida suave", hint: "Como en ART?ST: las pantallas pasan solas y se derriten una en la otra. Se distorsionan al pasar el dedo o el mouse." },
+  { value: "liquida", label: "Líquida suave", hint: "Como en ART?ST: una pantalla se derrite en la siguiente. Se distorsionan al pasar el dedo o el mouse." },
   { value: "liquida-fuerte", label: "Líquida psicodélica", hint: "La misma, pero con más distorsión y colores girando." },
 ];
 
 // picks: proyectos elegidos para la portada Web · App · Diseño (null = todos).
-type HeroData = { slides: HeroSlide[]; look: HeroLook; picks: string[] | null; fx: HeroFx };
+type HeroData = { slides: HeroSlide[]; look: HeroLook; picks: string[] | null; fx: HeroFx; auto: boolean };
 
 // hero_media guarda JSON: { slides, look }. Versiones anteriores: un arreglo de fotos o una URL por línea.
 function parseHero(raw: string | null): HeroData {
   const text = (raw ?? "").trim();
   const clean = (list: unknown): HeroSlide[] =>
     Array.isArray(list) ? list.filter((x) => x && typeof x.src === "string" && x.src) : [];
-  if (!text) return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro" };
+  if (!text) return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
   if (text.startsWith("[") || text.startsWith("{")) {
     try {
       const data = JSON.parse(text);
-      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK, picks: null, fx: "giro" };
+      if (Array.isArray(data)) return { slides: clean(data), look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
       const look = data.look ?? {};
       return {
         slides: clean(data.slides),
         picks: Array.isArray(data.picks) ? data.picks.filter((x: unknown) => typeof x === "string") : null,
         fx: HERO_FXS.some((f) => f.value === data.fx) ? data.fx : "giro",
+        auto: data.auto !== false,
         look: {
           filter: HERO_FILTERS.some((f) => f.value === look.filter) ? look.filter : "none",
           tint: isHex(look.tint) ? look.tint : DEFAULT_LOOK.tint,
@@ -97,18 +98,20 @@ function parseHero(raw: string | null): HeroData {
         },
       };
     } catch {
-      return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro" };
+      return { slides: [], look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
     }
   }
-  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK, picks: null, fx: "giro" };
+  return { slides: text.split("\n").map((src) => ({ src: src.trim() })).filter((x) => x.src), look: DEFAULT_LOOK, picks: null, fx: "giro", auto: true };
 }
 
 export const heroSlides = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).slides;
 export const heroLook = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).look;
 export const heroPicks = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).picks;
 export const heroFx = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).fx;
-export const serializeHero = (slides: HeroSlide[], look: HeroLook, picks: string[] | null = null, fx: HeroFx = "giro") =>
-  slides.length || picks || fx !== "giro" ? JSON.stringify({ slides, look, picks, fx }) : null;
+// auto: la transición líquida pasa sola (true) o avanza con el scroll (false).
+export const heroAuto = (s: Pick<Settings, "hero_media">) => parseHero(s.hero_media).auto;
+export const serializeHero = (slides: HeroSlide[], look: HeroLook, picks: string[] | null = null, fx: HeroFx = "giro", auto = true) =>
+  slides.length || picks || fx !== "giro" || !auto ? JSON.stringify({ slides, look, picks, fx, auto }) : null;
 
 export const HERO_TYPES: { value: HeroType; label: string; hint: string }[] = [
   { value: "logo", label: "Logo", hint: "El logo gira y se aleja al hacer scroll." },

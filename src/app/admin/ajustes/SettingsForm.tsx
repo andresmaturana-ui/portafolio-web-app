@@ -7,6 +7,7 @@ import {
   HERO_TYPES,
   HERO_FILTERS,
   HERO_FXS,
+  heroAuto,
   heroFx,
   heroLook,
   heroPicks,
@@ -67,17 +68,18 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
   const look = heroLook(s);
   const picks = heroPicks(s);
   const fx = heroFx(s);
-  const setSlides = (list: HeroSlide[]) => set("hero_media", serializeHero(list, look, picks, fx));
+  const auto = heroAuto(s);
+  const setSlides = (list: HeroSlide[]) => set("hero_media", serializeHero(list, look, picks, fx, auto));
   const addSlides = (list: HeroSlide[]) =>
-    setS((prev) => ({ ...prev, hero_media: serializeHero([...heroSlides(prev), ...list], heroLook(prev), heroPicks(prev), heroFx(prev)) }));
-  const setLook = (patch: Partial<HeroLook>) => set("hero_media", serializeHero(slides, { ...look, ...patch }, picks, fx));
+    setS((prev) => ({ ...prev, hero_media: serializeHero([...heroSlides(prev), ...list], heroLook(prev), heroPicks(prev), heroFx(prev), heroAuto(prev)) }));
+  const setLook = (patch: Partial<HeroLook>) => set("hero_media", serializeHero(slides, { ...look, ...patch }, picks, fx, auto));
   // Proyectos que pueden ir en la portada Web · App · Diseño (los que tienen imagen).
   const coverable = projects.filter((p) => ["app", "web", "diseno"].includes(p.category) && p.images.length);
   const isPicked = (slug: string) => !picks || picks.includes(slug);
   const togglePick = (slug: string) => {
     const current = picks ?? coverable.map((p) => p.slug);
     const next = current.includes(slug) ? current.filter((x) => x !== slug) : [...current, slug];
-    set("hero_media", serializeHero(slides, look, next, fx));
+    set("hero_media", serializeHero(slides, look, next, fx, auto));
   };
   const editSlide = (i: number, patch: Partial<HeroSlide>) => setSlides(slides.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const moveSlide = (i: number, to: number) => {
@@ -227,12 +229,26 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
             <div className="template-options" role="radiogroup" aria-label="Transición de la portada">
               {HERO_FXS.map((t) => (
                 <label key={t.value} className={`template-option ${fx === t.value ? "is-on" : ""}`}>
-                  <input type="radio" name="hero_fx" value={t.value} checked={fx === t.value} onChange={() => set("hero_media", serializeHero(slides, look, picks, t.value))} />
+                  <input type="radio" name="hero_fx" value={t.value} checked={fx === t.value} onChange={() => set("hero_media", serializeHero(slides, look, picks, t.value, auto))} />
                   <strong>{t.label}</strong>
                   <span>{t.hint}</span>
                 </label>
               ))}
             </div>
+            {fx.startsWith("liquida") && (
+              <div className="template-options" role="radiogroup" aria-label="Cómo avanza la portada líquida">
+                {[
+                  { value: true, label: "Pasan solas", hint: "Cada pantalla queda unos segundos y se derrite en la siguiente, sin hacer nada." },
+                  { value: false, label: "Con el scroll", hint: "Avanzan al bajar y retroceden al subir, como las otras transiciones." },
+                ].map((o) => (
+                  <label key={o.label} className={`template-option ${auto === o.value ? "is-on" : ""}`}>
+                    <input type="radio" name="hero_auto" checked={auto === o.value} onChange={() => set("hero_media", serializeHero(slides, look, picks, fx, o.value))} />
+                    <strong>{o.label}</strong>
+                    <span>{o.hint}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {s.hero_type === "dispositivos" && (

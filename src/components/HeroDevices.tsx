@@ -51,14 +51,14 @@ function Caption({ item, index, total }: { item?: HeroItem; index: number; total
 
 // Portada "Web · App · Diseño": los proyectos pasan uno por uno con la transición elegida en Ajustes.
 // El scroll dentro de la sección decide cuál queda al centro; al subir vuelven atrás.
-export function HeroDevices({ items, fx = "giro" }: { items: HeroItem[]; fx?: HeroFx }) {
+export function HeroDevices({ items, fx = "giro", auto = true }: { items: HeroItem[]; fx?: HeroFx; auto?: boolean }) {
   const liquid = fx === "liquida" || fx === "liquida-fuerte";
   // Sin WebGL (o si una imagen no se deja dibujar) la líquida pasa a carrusel.
   const [fallback, setFallback] = useState(false);
   useEffect(() => {
     if (liquid && !liquidSupported()) setFallback(true);
   }, [liquid]);
-  if (liquid && !fallback) return <HeroLiquid items={items} strength={fx === "liquida-fuerte" ? 0.5 : 0.22} onFail={() => setFallback(true)} />;
+  if (liquid && !fallback) return <HeroLiquid items={items} auto={auto} strength={fx === "liquida-fuerte" ? 0.5 : 0.22} onFail={() => setFallback(true)} />;
   return <HeroFlow items={items} spin={fx === "giro"} />;
 }
 
@@ -170,11 +170,11 @@ function frameRect(kind: HeroItem["kind"], W: number, H: number): [number, numbe
 }
 
 // Líquida: las pantallas pasan solas (cada una queda unos segundos mientras corre su captura y luego se
-// derrite en la siguiente). Al pasar el dedo o el mouse se distorsiona alrededor del puntero.
+// derrite en la siguiente) o con el scroll, según Ajustes. Al pasar el dedo o el mouse se distorsiona alrededor del puntero.
 const LIQUID_HOLD = 3.6;
 const LIQUID_MOVE = 1.3;
 
-function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: number; onFail: () => void }) {
+function HeroLiquid({ items, auto, strength, onFail }: { items: HeroItem[]; auto: boolean; strength: number; onFail: () => void }) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [current, setCurrent] = useState(0);
@@ -182,7 +182,8 @@ function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: 
   useEffect(() => {
     const el = root.current;
     const cv = canvas.current;
-    if (!el || !cv || !items.length) return;
+    const track = el?.closest(".track") as HTMLElement | null;
+    if (!el || !cv || !track || !items.length) return;
     let gfx: ReturnType<typeof createLiquid> = null;
     try {
       gfx = createLiquid(cv, strength);
@@ -236,24 +237,37 @@ function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: 
       if (dead) return;
       const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
       last = now;
-      const next = (index + 1) % n;
+      let next: number;
+      let mix: number;
+      let t: number;
+      if (auto) {
+        next = (index + 1) % n;
+        if (n > 1 && ready(index) && ready(next)) clock += dt;
+        if (clock >= LIQUID_HOLD + LIQUID_MOVE) {
+          clock -= LIQUID_HOLD + LIQUID_MOVE;
+          index = next;
+          next = (index + 1) % n;
+        }
+        const x = Math.max(0, (clock - LIQUID_HOLD) / LIQUID_MOVE);
+        mix = x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+        t = Math.min(1, clock / LIQUID_HOLD);
+      } else {
+        // Con el scroll: mismos tramos que el carrusel (quieto mientras corre la pantalla, luego se derrite).
+        const { f, screenT } = heroProgress(track, n);
+        index = Math.floor(f);
+        next = Math.min(index + 1, n - 1);
+        mix = f - index;
+        t = screenT(index);
+      }
+      setCurrent(index);
       load(index);
       load(next);
       load(index + 2);
-      if (n > 1 && ready(index) && ready(next)) clock += dt;
-      if (clock >= LIQUID_HOLD + LIQUID_MOVE) {
-        clock -= LIQUID_HOLD + LIQUID_MOVE;
-        index = next;
-        setCurrent(index);
-      }
-      const x = Math.max(0, (clock - LIQUID_HOLD) / LIQUID_MOVE);
-      const mix = x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
-      const t = Math.min(1, clock / LIQUID_HOLD);
       mouse[0] += (target[0] - mouse[0]) * 0.18;
       mouse[1] += (target[1] - mouse[1]) * 0.18;
       hover *= 0.965;
       const a = shot(index, t);
-      const b = shot((index + 1) % n, 0) ?? a;
+      const b = shot(next, 0) ?? a;
       if (a && b) {
         try {
           liquid.draw(a, b, mix, now / 1000, mouse, hover);
@@ -310,7 +324,7 @@ function HeroLiquid({ items, strength, onFail }: { items: HeroItem[]; strength: 
     };
     // onFail cambia en cada render del padre; no hace falta volver a montar por eso.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, strength]);
+  }, [items, strength, auto]);
 
   const active = items[current];
   return (
