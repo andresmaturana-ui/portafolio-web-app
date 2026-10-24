@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Browser, Phone } from "@/components/Devices";
 import { createLiquid, liquidSupported } from "@/components/liquid";
-import type { HeroFx } from "@/lib/settings";
+import { isLiquid, type HeroFx } from "@/lib/settings";
 import { STICKER_SIZES, type Sticker } from "@/lib/types";
 
 export type HeroItem = {
@@ -59,13 +59,13 @@ function Caption({ item, index, total }: { item?: HeroItem; index: number; total
 // Portada "Web · App · Diseño": los proyectos pasan uno por uno con la transición elegida en Ajustes.
 // El scroll dentro de la sección decide cuál queda al centro; al subir vuelven atrás.
 export function HeroDevices({ items, fx = "giro", auto = true, bg = true, phones = 5 }: { items: HeroItem[]; fx?: HeroFx; auto?: boolean; bg?: boolean; phones?: 3 | 5 }) {
-  const liquid = fx === "liquida" || fx === "liquida-fuerte";
+  const liquid = isLiquid(fx);
   // Sin WebGL (o si una imagen no se deja dibujar) la líquida pasa a carrusel.
   const [fallback, setFallback] = useState(false);
   useEffect(() => {
     if (liquid && !liquidSupported()) setFallback(true);
   }, [liquid]);
-  if (liquid && !fallback) return <HeroLiquid items={items} auto={auto} bg={bg} phones={phones} strength={fx === "liquida-fuerte" ? 0.5 : 0.22} onFail={() => setFallback(true)} />;
+  if (liquid && !fallback) return <HeroLiquid items={items} auto={auto} bg={bg} phones={phones} ambient={fx === "psicodelica"} strength={fx === "liquida" ? 0.22 : 0.5} onFail={() => setFallback(true)} />;
   return <HeroFlow items={items} spin={fx === "giro"} />;
 }
 
@@ -414,7 +414,24 @@ function drawFrame(ctx: CanvasRenderingContext2D, f: Frame, img: HTMLImageElemen
 const LIQUID_HOLD = 3.6;
 const LIQUID_MOVE = 1.3;
 
-function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: HeroItem[]; auto: boolean; bg: boolean; phones: 3 | 5; strength: number; onFail: () => void }) {
+// ambient: psicodélica siempre; al mantener apretado se vuelve nítida y al soltar vuelve el efecto.
+function HeroLiquid({
+  items,
+  auto,
+  bg,
+  phones,
+  ambient,
+  strength,
+  onFail,
+}: {
+  items: HeroItem[];
+  auto: boolean;
+  bg: boolean;
+  phones: 3 | 5;
+  ambient: boolean;
+  strength: number;
+  onFail: () => void;
+}) {
   const root = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [current, setCurrent] = useState(0);
@@ -509,6 +526,9 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
     const mouse: [number, number] = [-9999, -9999];
     const target: [number, number] = [-9999, -9999];
     let hover = 0;
+    // Mantener apretado: clear sube hasta 1 (nítida) y al soltar vuelve a 0.
+    let pressStart = 0;
+    let clear = 0;
     const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
 
     const render = (now: number) => {
@@ -533,7 +553,8 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
             tween = null;
           }
         } else {
-          if (n > 1 && ready(wrap(settled)) && ready(wrap(settled + 1))) timer += dt;
+          // Mientras se mantiene apretado, se queda en el mismo proyecto.
+          if (n > 1 && !pressStart && ready(wrap(settled)) && ready(wrap(settled + 1))) timer += dt;
           if (timer >= LIQUID_HOLD) tween = { from: pos, to: settled + 1, start: now, dur: LIQUID_MOVE * 1000 };
         }
         const base = Math.floor(pos);
@@ -560,8 +581,11 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
       mouse[0] += (target[0] - mouse[0]) * 0.18;
       mouse[1] += (target[1] - mouse[1]) * 0.18;
       hover *= 0.965;
+      const pressing = pressStart > 0 && !drag?.moved;
+      clear = Math.min(1, Math.max(0, clear + (pressing ? dt / 1.2 : -dt / 0.8)));
+      const sharp = clear * clear * (3 - 2 * clear);
       try {
-        liquid.draw(scene(0, index, tA), scene(1, next, tB), mix, now / 1000, mouse, hover);
+        liquid.draw(scene(0, index, tA), scene(1, next, tB), mix, now / 1000, mouse, hover * (1 - sharp), ambient ? 1 - sharp : 0);
       } catch {
         dead = true;
         onFail();
@@ -604,11 +628,15 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
     // Pasar con el dedo (o arrastrando el mouse) de lado: solo cuando las pantallas pasan solas.
     const onDown = (e: PointerEvent) => {
       point(e.clientX, e.clientY);
+      if (e.pointerType !== "mouse" || e.button === 0) pressStart = performance.now();
       if (!auto || n < 2 || (e.pointerType === "mouse" && e.button !== 0)) return;
       suppressClick = false;
       drag = { x0: e.clientX, y0: e.clientY, pos0: pos, moved: false };
     };
     const onUp = () => {
+      // Un toque largo (para verla nítida) no abre el proyecto.
+      if (pressStart && performance.now() - pressStart > 350) suppressClick = true;
+      pressStart = 0;
       if (!drag) return;
       if (drag.moved) {
         const moved = pos - drag.pos0;
@@ -630,6 +658,9 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
       }
     };
     const noDrag = (e: Event) => e.preventDefault();
+    const onLeave = () => {
+      pressStart = 0;
+    };
     const onTouch = (e: TouchEvent) => e.touches[0] && point(e.touches[0].clientX, e.touches[0].clientY);
     const onResize = () => {
       liquid.resize();
@@ -642,6 +673,8 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
     el.addEventListener("pointercancel", onUp);
     el.addEventListener("click", onClick, true);
     el.addEventListener("dragstart", noDrag);
+    el.addEventListener("contextmenu", noDrag);
+    el.addEventListener("pointerleave", onLeave);
     el.addEventListener("touchmove", onTouch, { passive: true });
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("resize", onResize);
@@ -655,6 +688,8 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
       el.removeEventListener("pointercancel", onUp);
       el.removeEventListener("click", onClick, true);
       el.removeEventListener("dragstart", noDrag);
+      el.removeEventListener("contextmenu", noDrag);
+      el.removeEventListener("pointerleave", onLeave);
       el.removeEventListener("touchmove", onTouch);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
@@ -662,7 +697,7 @@ function HeroLiquid({ items, auto, bg, phones, strength, onFail }: { items: Hero
     };
     // onFail cambia en cada render del padre; no hace falta volver a montar por eso.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, strength, auto, bg, phones]);
+  }, [items, strength, auto, bg, phones, ambient]);
 
   const active = items[current];
   return (

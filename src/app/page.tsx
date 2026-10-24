@@ -5,7 +5,7 @@ import { HeroDevices, type HeroItem } from "@/components/HeroDevices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { JsonLd } from "@/components/JsonLd";
 import { getSettings } from "@/lib/get-settings";
-import { heroData, heroLook, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
+import { heroData, heroLook, isLiquid, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
 import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
@@ -49,7 +49,7 @@ export default async function Home() {
   const hero =
     settings.hero_type === "dispositivos" ? (heroItems.length ? "dispositivos" : "logo") : settings.hero_media && settings.hero_type !== "logo" ? settings.hero_type : "logo";
   // Con más fotos la portada dura más scroll, para que cada una alcance a verse.
-  const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : hero === "dispositivos" ? (heroData(settings).fx.startsWith("liquida") && heroData(settings).auto ? 1800 : Math.max(2400, 1400 + heroItems.length * 520)) : Math.max(2400, 1200 + heroSlides(settings).length * 450);
+  const heroHeight = hero === "logo" ? 1800 : hero === "video" ? 2400 : hero === "dispositivos" ? (isLiquid(heroData(settings).fx) && heroData(settings).auto ? 1800 : Math.max(2400, 1400 + heroItems.length * 520)) : Math.max(2400, 1200 + heroSlides(settings).length * 450);
 
   let n = 0;
   const next = () => pad2(++n);

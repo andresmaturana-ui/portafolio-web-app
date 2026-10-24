@@ -64,13 +64,20 @@ export const HERO_FILTERS: { value: HeroFilter; label: string; hint: string }[] 
 ];
 
 // Cómo pasan los proyectos en la portada Web · App · Diseño.
-export type HeroFx = "giro" | "carrusel" | "liquida" | "liquida-fuerte";
+export type HeroFx = "giro" | "carrusel" | "liquida" | "liquida-fuerte" | "psicodelica";
 export const HERO_FXS: { value: HeroFx; label: string; hint: string }[] = [
   { value: "giro", label: "Giro con luces", hint: "Cada pieza da una vuelta completa al pasar, con luces y líneas de neón." },
   { value: "carrusel", label: "Carrusel 3D", hint: "Pasan de lado en 3D, sin girar ni luces: más sobrio." },
   { value: "liquida", label: "Líquida suave", hint: "Como en ART?ST: una pantalla se derrite en la siguiente. Se distorsionan al pasar el dedo o el mouse." },
   { value: "liquida-fuerte", label: "Líquida psicodélica", hint: "La misma, pero con más distorsión y colores girando." },
+  {
+    value: "psicodelica",
+    label: "Psicodélica siempre",
+    hint: "Siempre derretida y con colores girando. Al mantener apretado (dedo o mouse) se vuelve nítida; al soltar vuelve lo psicodélico.",
+  },
 ];
+// Las que usan la escena líquida (WebGL).
+export const isLiquid = (fx: HeroFx) => fx === "liquida" || fx === "liquida-fuerte" || fx === "psicodelica";
 
 // Todo lo de la portada que va en hero_media (JSON):
 // picks: proyectos elegidos para la portada Web · App · Diseño (null = todos).

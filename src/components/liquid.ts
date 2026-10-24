@@ -3,7 +3,7 @@
 // colores girando). Al pasar el dedo o el mouse, la escena se distorsiona alrededor del puntero.
 const VS = "attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;uv.y=1.-uv.y;gl_Position=vec4(p,0,1);}";
 const FS = `precision highp float;varying vec2 uv;
-uniform sampler2D t0,t1;uniform float prog,time,strength,hover;uniform vec2 res,mouse;
+uniform sampler2D t0,t1;uniform float prog,time,strength,hover,amb;uniform vec2 res,mouse;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p*=2.;a*=.5;}return v;}
@@ -12,18 +12,21 @@ vec4 samp(sampler2D t,vec2 c,float ab){vec4 o=texture2D(t,c);return vec4(texture
 void main(){
  float w=sin(prog*3.14159);
  vec2 q=uv*3.;float f=fbm(q+vec2(time*.25,-time*.2)+fbm(q*1.7-time*.15));
- vec2 d=vec2(cos(f*6.2831),sin(f*6.2831))*(f-.3)*strength*w;
+ vec2 dir=vec2(cos(f*6.2831),sin(f*6.2831));
+ vec2 d=dir*(f-.3)*strength*w;
+ vec2 da=dir*(f-.3)*strength*amb;
  float edge=smoothstep(prog-.18,prog+.18,f*.9+uv.y*.1+.05);
  vec2 pm=(uv-mouse)*vec2(res.x/res.y,1.);
  float m=hover*exp(-dot(pm,pm)/.012);
  vec2 dm=vec2(cos(f*6.2831),sin(f*6.2831))*.05*m-pm*.35*m;
- float ab=.025*w*strength/.35+.012*m;
- vec4 c0=samp(t0,uv+d*prog+dm,ab);
- vec4 c1=samp(t1,uv-d*(1.-prog)+dm,ab);
+ float ab=.025*max(w,amb)*strength/.35+.012*m;
+ vec4 c0=samp(t0,uv+d*prog+dm+da,ab);
+ vec4 c1=samp(t1,uv-d*(1.-prog)+dm+da,ab);
  vec4 c=mix(c1,c0,edge);
  float s=min(1.,strength/.35);
- c.rgb=hue(c.rgb,w*f*5.*s+m*f*2.);
- c.rgb=mix(c.rgb,c.rgb*1.2+vec3(.06,0,.1)*w,w*s);
+ float wa=max(w,amb);
+ c.rgb=hue(c.rgb,wa*f*5.*s+m*f*2.+amb*time*.6);
+ c.rgb=mix(c.rgb,c.rgb*1.2+vec3(.06,0,.1)*wa,wa*s);
  gl_FragColor=c;}`;
 
 export function liquidSupported() {
@@ -56,7 +59,7 @@ export function createLiquid(canvas: HTMLCanvasElement, strength: number) {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const U: Record<string, WebGLUniformLocation | null> = {};
-  ["t0", "t1", "prog", "time", "strength", "hover", "res", "mouse"].forEach((k) => {
+  ["t0", "t1", "prog", "time", "strength", "hover", "amb", "res", "mouse"].forEach((k) => {
     U[k] = gl.getUniformLocation(prog, k);
   });
   [0, 1].forEach((unit) => {
@@ -91,11 +94,13 @@ export function createLiquid(canvas: HTMLCanvasElement, strength: number) {
 
   // a y b: lienzos con la escena de cada proyecto, del mismo tamaño que este (null = no cambió, no se vuelve a subir).
   // mouse: posición del puntero en px dentro del lienzo; hover: 0 (quieto) → 1 (moviéndose).
-  const draw = (a: TexImageSource | null, b: TexImageSource | null, p: number, time: number, mouse: [number, number], hover: number) => {
+  // amb: distorsión psicodélica permanente (0 = nítida, 1 = completa), además de la de la transición.
+  const draw = (a: TexImageSource | null, b: TexImageSource | null, p: number, time: number, mouse: [number, number], hover: number, amb = 0) => {
     upload(0, a);
     upload(1, b);
     gl.uniform2f(U.mouse, mouse[0] / (canvas.clientWidth || 1), mouse[1] / (canvas.clientHeight || 1));
     gl.uniform1f(U.hover, hover);
+    gl.uniform1f(U.amb, amb);
     gl.uniform1f(U.prog, p);
     gl.uniform1f(U.time, time);
     gl.clearColor(0, 0, 0, 0);

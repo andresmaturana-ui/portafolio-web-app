@@ -7,6 +7,7 @@ import {
   HERO_TYPES,
   HERO_FILTERS,
   HERO_FXS,
+  isLiquid,
   type HeroData,
   heroData,
   heroLook,
@@ -238,7 +239,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                 </label>
               ))}
             </div>
-            {fx.startsWith("liquida") && (
+            {isLiquid(fx) && (
               <div className="template-options" role="radiogroup" aria-label="Cómo avanza la portada líquida">
                 {[
                   { value: true, label: "Pasan solas", hint: "Cada pantalla queda unos segundos y se derrite en la siguiente, sin hacer nada." },
@@ -252,7 +253,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                 ))}
               </div>
             )}
-            {fx.startsWith("liquida") && (
+            {isLiquid(fx) && (
               <div className="template-options" role="radiogroup" aria-label="Fondo de la portada líquida">
                 {[
                   { value: true, label: "Con fondo", hint: "Una imagen del proyecto llena toda la portada, desenfocada y oscura (la que subes en cada proyecto o su portada)." },
@@ -266,7 +267,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                 ))}
               </div>
             )}
-            {fx.startsWith("liquida") && (
+            {isLiquid(fx) && (
               <div className="template-options" role="radiogroup" aria-label="Celulares por app">
                 {([
                   { value: 5, label: "5 celulares", hint: "Cada app llena el ancho con cinco pantallas (en el celular se ven tres)." },

@@ -684,3 +684,5 @@ img { display: block; max-width: 100%; }
 .sticker-colors { display: flex; gap: 8px; flex-wrap: wrap; }
 .sticker-swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; }
 .sticker-swatch.is-on { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Portada líquida: mantener apretado no abre el menú del sistema (sirve para verla nítida) */
+.hero-devices--liquid { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
