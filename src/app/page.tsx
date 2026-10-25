@@ -250,7 +250,7 @@ export default async function Home() {
               )}
             </div>
             <div className="services">
-              {site.services.map((s) => (
+              {settings.services.map((s) => (
                 <div key={s.name} className="service">
                   <span>{s.name}</span>
                   <span className="mono">{s.detail}</span>
@@ -259,7 +259,7 @@ export default async function Home() {
             </div>
           </div>
           <div className="rv" style={{ flex: "1 1 420px", minWidth: 0 }}>
-            <ContactForm services={site.services.map((s) => s.name)} />
+            <ContactForm services={settings.services.map((s) => s.name)} />
           </div>
         </section>
       </main>

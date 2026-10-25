@@ -191,6 +191,32 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
           </div>
         </div>
         <span className="label">Se muestran en la sección Contacto. El teléfono lleva el código de país (+56) para que funcione el botón de WhatsApp. Los mensajes del formulario llegan a Mensajes.</span>
+        <input type="hidden" name="services" value={JSON.stringify(s.services)} />
+        <span className="label" style={{ marginTop: 16 }}>Servicios (nombre y detalle). También son las opciones del formulario de contacto.</span>
+        <div className="slide-list">
+          {s.services.map((sv, i) => (
+            <div key={i} className="slide-row" style={{ gridTemplateColumns: "1fr auto" }}>
+              <div className="slide-fields">
+                <input className="input" placeholder="Servicio, p. ej. Apps móviles" aria-label={`Servicio ${i + 1}`} value={sv.name} onChange={(e) => set("services", s.services.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
+                <input className="input" placeholder="Detalle, p. ej. iOS · Android" aria-label={`Detalle del servicio ${i + 1}`} value={sv.detail} onChange={(e) => set("services", s.services.map((x, j) => (j === i ? { ...x, detail: e.target.value } : x)))} />
+              </div>
+              <div className="slide-actions">
+                <button type="button" className="btn btn--ghost" disabled={i === 0} onClick={() => set("services", s.services.map((x, j, all) => (j === i - 1 ? all[i] : j === i ? all[i - 1] : x)))} aria-label="Subir">
+                  ↑
+                </button>
+                <button type="button" className="btn btn--ghost" disabled={i === s.services.length - 1} onClick={() => set("services", s.services.map((x, j, all) => (j === i + 1 ? all[i] : j === i ? all[i + 1] : x)))} aria-label="Bajar">
+                  ↓
+                </button>
+                <button type="button" className="btn btn--danger" onClick={() => set("services", s.services.filter((_, j) => j !== i))} aria-label="Quitar servicio">
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button type="button" className="btn btn--ghost" style={{ width: "fit-content" }} onClick={() => set("services", [...s.services, { name: "", detail: "" }])}>
+          + Agregar servicio
+        </button>
       </section>
 
       <section className="settings-block">

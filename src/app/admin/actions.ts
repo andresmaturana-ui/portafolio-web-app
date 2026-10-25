@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { slugify } from "@/lib/projects";
-import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseHiddenSections, parseSectionOrder, SETTINGS_TABLE, serializeSections, type Settings } from "@/lib/settings";
+import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseHiddenSections, parseServices, parseSectionOrder, SETTINGS_TABLE, serializeSections, type Settings } from "@/lib/settings";
 import { MESSAGES_TABLE, TABLE } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES, parseSticker, type Category } from "@/lib/types";
@@ -120,14 +120,15 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
     hero_dir: pick("hero_dir", ["ltr", "rtl"], "ltr"),
     contact_email: String(formData.get("contact_email") ?? "").trim() || null,
     contact_phone: String(formData.get("contact_phone") ?? "").trim() || null,
+    services: JSON.stringify(parseServices(String(formData.get("services") ?? "[]"))),
     section_order: serializeSections(parseSectionOrder(formData.get("section_order")), parseHiddenSections(formData.get("section_order"))),
     updated_at: new Date().toISOString(),
   };
   let { error } = await supabase.from(SETTINGS_TABLE).upsert(record);
   // Tabla sin la columna nueva (falta volver a correr ajustes.sql): guarda el resto igual.
   let missingOrder = false;
-  if (error && /section_order/.test(error.message)) {
-    const { section_order: _o, ...rest } = record;
+  if (error && /section_order|services/.test(error.message)) {
+    const { section_order: _o, services: _sv, ...rest } = record;
     ({ error } = await supabase.from(SETTINGS_TABLE).upsert(rest));
     missingOrder = !error;
   }
@@ -141,7 +142,7 @@ export async function saveSettings(_prev: SettingsState, formData: FormData): Pr
     return { error: `No se pudo guardar: ${error.message}` };
   }
   revalidatePath("/", "layout");
-  if (missingOrder) return { error: "Se guardó todo menos el orden de las secciones: vuelve a correr supabase/ajustes.sql en Supabase y guarda de nuevo." };
+  if (missingOrder) return { error: "Se guardó todo menos el orden de las secciones y los servicios: vuelve a correr supabase/ajustes.sql en Supabase y guarda de nuevo." };
   return { ok: true };
 }
 

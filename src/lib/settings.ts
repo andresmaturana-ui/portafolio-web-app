@@ -13,6 +13,7 @@ export type Settings = {
   hero_dir: HeroDir;
   contact_email: string | null;
   contact_phone: string | null;
+  services: Service[];
   section_order: SectionId[];
   sections_hidden: SectionId[];
 };
@@ -44,6 +45,27 @@ export const parseHiddenSections = (raw: unknown): SectionId[] =>
     .filter((x): x is SectionId => SECTIONS.some((s) => s.value === x));
 export const serializeSections = (order: SectionId[], hidden: SectionId[]) =>
   order.map((id) => (hidden.includes(id) ? `!${id}` : id)).join(",");
+
+// Servicios de la sección Contacto (también son las opciones del formulario).
+export type Service = { name: string; detail: string };
+export const DEFAULT_SERVICES: Service[] = [
+  { name: "Apps móviles", detail: "iOS · Android" },
+  { name: "Sitios web", detail: "Landing · E-commerce" },
+  { name: "Diseño gráfico", detail: "Marca · Editorial" },
+  { name: "Fotografía", detail: "Retrato · Producto" },
+];
+export function parseServices(raw: unknown): Service[] {
+  try {
+    const list = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(list)) return DEFAULT_SERVICES;
+    return list
+      .filter((x) => x && typeof x.name === "string" && x.name.trim())
+      .slice(0, 20)
+      .map((x) => ({ name: String(x.name).trim().slice(0, 60), detail: String(x.detail ?? "").trim().slice(0, 80) }));
+  } catch {
+    return DEFAULT_SERVICES;
+  }
+}
 
 export type HeroType = "logo" | "dispositivos" | "imagen" | "video";
 export type HeroDir = "ltr" | "rtl";
@@ -142,6 +164,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hero_dir: "ltr",
   contact_email: null,
   contact_phone: null,
+  services: DEFAULT_SERVICES,
   section_order: ["app", "web", "foto", "diseno"],
   sections_hidden: [],
 };

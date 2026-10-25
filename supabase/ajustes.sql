@@ -22,6 +22,8 @@ alter table public.portfolio_settings add column if not exists hero_dir text;
 -- Contacto que se muestra en la web (se edita en Ajustes).
 alter table public.portfolio_settings add column if not exists contact_email text;
 alter table public.portfolio_settings add column if not exists contact_phone text;
+-- Servicios de la sección Contacto (JSON: [{ name, detail }])
+alter table public.portfolio_settings add column if not exists services text;
 -- Orden de las secciones del inicio, p. ej. 'app,web,foto,diseno'.
 alter table public.portfolio_settings add column if not exists section_order text;
 
