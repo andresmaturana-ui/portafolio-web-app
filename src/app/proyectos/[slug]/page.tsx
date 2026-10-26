@@ -4,8 +4,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/JsonLd";
 import { getProjectBySlug } from "@/lib/projects";
 import { site } from "@/lib/site";
-import { StickerBadge } from "@/components/StickerBadge";
-import { CATEGORIES, parseSticker, templateFor, type Project } from "@/lib/types";
+import { CATEGORIES, templateFor, type Project } from "@/lib/types";
 import { AppEscaparate, AppHistoria, FotoGaleria, WebGaleria, WebNavegador } from "./templates";
 
 export const revalidate = 60;
@@ -65,7 +64,6 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         )}
       </header>
       <article className="tpl">
-        {parseSticker(p.sticker) && <StickerBadge sticker={parseSticker(p.sticker)!} className="tpl-sticker" />}
         <Template p={p} />
       </article>
       <JsonLd

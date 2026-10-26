@@ -345,8 +345,8 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
           <div className="field">
             <span className="label">Logo como sticker (opcional)</span>
             <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
-              Si el proyecto tiene logo, súbelo (mejor PNG o SVG con fondo transparente). Aparece como un sticker circular pegado en la página del proyecto y en la
-              portada líquida.
+              Si el proyecto tiene logo, súbelo (mejor PNG o SVG con fondo transparente). Aparece como un sticker circular pegado en la
+              portada líquida (solo ahí, no en la página del proyecto).
             </span>
           </div>
           {sticker && (
