@@ -729,3 +729,14 @@ img { display: block; max-width: 100%; }
 .tpl-eco-item { margin: 0; }
 .tpl-eco-item .tpl-eco-cap { margin-left: 0; width: auto; }
 .tpl-shot-cap { margin: 0; padding: 12px 16px; font-size: 15px; line-height: 1.5; }
+/* Celular con su pantalla de escritorio (pareja) en la cinta de pantallas y en la historia */
+.tpl-rail-item--pair .tpl-eco { width: clamp(300px, 62vw, 720px); margin: 0; }
+.tpl-rail-item--pair figcaption { max-width: clamp(300px, 62vw, 720px); }
+.tpl-story-device--pair { display: block; }
+.tpl-story-device--pair .tpl-eco { width: 100%; margin: 0; }
+.tpl-rail-item .tpl-eco .tpl-eco-phone, .tpl-story-device .tpl-eco .tpl-eco-phone { width: clamp(80px, 24%, 200px); }
+.thumb-pair { display: grid; gap: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.thumb-pair-img { width: 56px; aspect-ratio: 9 / 19; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+.thumb-pair-img--wide { width: 100%; aspect-ratio: 16 / 10; }
+.thumb-pair-upload { position: relative; font-size: 13px; text-decoration: underline; cursor: pointer; justify-self: start; }
+.thumb-pair-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }

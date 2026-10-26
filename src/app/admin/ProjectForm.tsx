@@ -5,7 +5,7 @@ import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { StickerBadge } from "@/components/StickerBadge";
 import { TitleLogo } from "@/components/TitleLogo";
-import { CATEGORIES, DEFAULT_TEMPLATE, parseCaptions, parseLogoOpts, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
+import { CATEGORIES, DEFAULT_TEMPLATE, parseCaptions, parsePairs, parseLogoOpts, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
 import { saveProject, type FormState } from "./actions";
 
 const IMAGE_HINTS: Record<Category, string> = {
@@ -36,6 +36,15 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
     return Object.fromEntries(imgs.flatMap((src, i) => (lines[i] ? [[src, lines[i]]] : [])));
   });
   const setCaption = (src: string, text: string) => setCaptions((prev) => ({ ...prev, [src]: text }));
+  // Pareja de cada imagen: a un celular, una captura de escritorio; a un escritorio, una de celular.
+  const [pairs, setPairs] = useState<Record<string, string>>(() => parsePairs(project?.pairs));
+  const setPair = (src: string, url: string) =>
+    setPairs((prev) => {
+      const next = { ...prev };
+      if (url) next[src] = url;
+      else delete next[src];
+      return next;
+    });
   const editSticker = (patch: Partial<Sticker>) => setSticker((prev) => (prev ? { ...prev, ...patch } : prev));
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
@@ -88,6 +97,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       <input type="hidden" name="images" value={JSON.stringify(images)} />
       <input type="hidden" name="desktop" value={JSON.stringify(desktop)} />
       <input type="hidden" name="captions" value={JSON.stringify(captions)} />
+      <input type="hidden" name="pairs" value={JSON.stringify(pairs)} />
       <input type="hidden" name="hero_bg" value={heroBg} />
       <input type="hidden" name="logo" value={logo} />
       <input type="hidden" name="logo_color" value={logoColor} />
@@ -226,6 +236,16 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
                   value={captions[src] ?? ""}
                   onChange={(e) => setCaption(src, e.target.value)}
                 />
+                {category === "app" && (
+                  <PairPicker
+                    label="Con escritorio"
+                    value={pairs[src] ?? ""}
+                    options={desktop.map((d, j) => ({ value: d, label: `Escritorio ${num(j)}` }))}
+                    onChange={(url) => setPair(src, url)}
+                    onUpload={(files) => onFiles(files, (url) => setPair(src, url))}
+                    wide
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -300,6 +320,14 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
                     aria-label={`Texto de escritorio ${num(i)}`}
                     value={captions[src] ?? ""}
                     onChange={(e) => setCaption(src, e.target.value)}
+                  />
+                  <PairPicker
+                    label="Con celular"
+                    value={pairs[src] ?? ""}
+                    empty={i === 0 ? "Automático (el 01)" : "Ninguno"}
+                    options={images.map((m, j) => ({ value: m, label: `Celular ${num(j)}` }))}
+                    onChange={(url) => setPair(src, url)}
+                    onUpload={(files) => onFiles(files, (url) => setPair(src, url))}
                   />
                 </div>
               ))}
@@ -541,5 +569,54 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
         </button>
       </div>
     </form>
+  );
+}
+
+// Elegir la captura que acompaña a una imagen: una de la otra lista o una subida solo para esto.
+function PairPicker({
+  label,
+  value,
+  options,
+  onChange,
+  onUpload,
+  empty = "Ninguna",
+  wide = false,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (url: string) => void;
+  onUpload: (files: FileList | null) => void;
+  empty?: string;
+  wide?: boolean;
+}) {
+  const known = !value || options.some((o) => o.value === value);
+  return (
+    <div className="thumb-pair">
+      <label className="thumb-num">
+        {label}
+        <select className="input" value={value} onChange={(e) => onChange(e.target.value)}>
+          <option value="">{empty}</option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+          {!known && <option value={value}>Subida aparte</option>}
+        </select>
+      </label>
+      {value && <img className={`thumb-pair-img ${wide ? "thumb-pair-img--wide" : ""}`} src={value} alt="" />}
+      <label className="thumb-pair-upload">
+        Subir otra
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            onUpload(e.target.files);
+            e.target.value = "";
+          }}
+        />
+      </label>
+    </div>
   );
 }

@@ -38,6 +38,8 @@ export type Project = {
   sticker?: string | null;
   /* Texto de cada imagen (celular o escritorio): JSON { "url de la imagen": "texto" } */
   captions?: string | null;
+  /* Captura que acompaña a cada imagen: a un celular, una de escritorio; a un escritorio, una de celular. JSON { "url": "url de la pareja" } */
+  pairs?: string | null;
   created_at?: string;
 };
 
@@ -103,6 +105,18 @@ export function parseCaptions(raw: unknown): Record<string, string> {
         .filter(([k, v]) => k && typeof v === "string" && v.trim())
         .map(([k, v]) => [k, (v as string).trim().slice(0, 600)]),
     );
+  } catch {
+    return {};
+  }
+}
+
+export function parsePairs(raw: unknown): Record<string, string> {
+  try {
+    const d = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!d || typeof d !== "object" || Array.isArray(d)) return {};
+    return Object.fromEntries(
+      Object.entries(d as Record<string, unknown>).filter(([k, v]) => k && typeof v === "string" && /^(https?:\/\/|\/)/.test(v)),
+    ) as Record<string, string>;
   } catch {
     return {};
   }

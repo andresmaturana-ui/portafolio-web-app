@@ -59,6 +59,7 @@ alter table public.portfolio_projects add column if not exists logo text;
 alter table public.portfolio_projects add column if not exists logo_color text;
 alter table public.portfolio_projects add column if not exists logo_opts text;
 alter table public.portfolio_projects add column if not exists captions text;
+alter table public.portfolio_projects add column if not exists pairs text;
 
 create index if not exists portfolio_projects_category_idx
   on public.portfolio_projects (category, sort);

@@ -1,7 +1,7 @@
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { FitBrowser } from "@/components/FitBrowser";
 import { TitleRow } from "@/components/TitleLogo";
-import { CATEGORIES, parseCaptions, type Project } from "@/lib/types";
+import { CATEGORIES, parseCaptions, parsePairs, type Project } from "@/lib/types";
 
 const pad2 = (n: number) => String(n + 1).padStart(2, "0");
 
@@ -12,6 +12,21 @@ function images(p: Project) {
 // Texto que el admin escribió para cada imagen (por su URL).
 function captions(p: Project) {
   return parseCaptions(p.captions);
+}
+
+// Captura que acompaña a cada imagen (celular ↔ escritorio).
+function pairs(p: Project) {
+  return p.category === "app" ? parsePairs(p.pairs) : {};
+}
+
+// Escritorio con un celular adelante, abajo a la izquierda.
+function EcoPair({ desk, phone, p, alt, className = "" }: { desk: string; phone?: string | null; p: Project; alt: string; className?: string }) {
+  return (
+    <div className={`tpl-eco ${className}`}>
+      <FitBrowser image={desk} url={p.link} title={p.title} alt={alt} />
+      {phone && <Phone className="phone--static tpl-eco-phone" image={phone} alt={`${p.title} en el celular`} />}
+    </div>
+  );
 }
 
 function lines(text: string) {
@@ -47,6 +62,7 @@ function Ecosistema({ p }: { p: Project }) {
   if (!desk.length) return null;
   const phone = images(p);
   const caps = captions(p);
+  const pair = pairs(p);
   const Caption = ({ i }: { i: number }) =>
     desk.length > 1 || caps[desk[i]] ? (
       <div className="tpl-eco-cap rv">
@@ -58,16 +74,25 @@ function Ecosistema({ p }: { p: Project }) {
     <section className="tpl-section">
       <p className="mono eyebrow">Ecosistema</p>
       <h2 className="tpl-eco-title">En el celular y en el escritorio</h2>
-      <div className="tpl-eco rv">
-        <FitBrowser image={desk[0]} url={p.link} title={p.title} alt={caps[desk[0]] ? `${p.title} en escritorio: ${caps[desk[0]]}` : `${p.title} en escritorio`} />
-        {phone[0] && <Phone className="phone--static tpl-eco-phone" image={phone[0]} alt={`${p.title} en el celular`} />}
-      </div>
+      <EcoPair
+        className="rv"
+        p={p}
+        desk={desk[0]}
+        phone={pair[desk[0]] ?? phone[0]}
+        alt={caps[desk[0]] ? `${p.title} en escritorio: ${caps[desk[0]]}` : `${p.title} en escritorio`}
+      />
       <Caption i={0} />
       {desk.length > 1 && (
         <div className="tpl-eco-more">
           {desk.slice(1).map((src, i) => (
             <figure key={src + i} className="tpl-eco-item">
-              <FitBrowser className="rv" image={src} url={p.link} title={p.title} alt={caps[src] ? `${p.title} en escritorio: ${caps[src]}` : `${p.title} en escritorio, pantalla ${i + 2}`} />
+              <EcoPair
+                className="rv"
+                p={p}
+                desk={src}
+                phone={pair[src]}
+                alt={caps[src] ? `${p.title} en escritorio: ${caps[src]}` : `${p.title} en escritorio, pantalla ${i + 2}`}
+              />
               <figcaption>
                 <Caption i={i + 1} />
               </figcaption>
@@ -83,6 +108,7 @@ function Ecosistema({ p }: { p: Project }) {
 export function AppEscaparate({ p }: { p: Project }) {
   const imgs = images(p);
   const caps = captions(p);
+  const pair = pairs(p);
   const features = lines(p.description);
   return (
     <>
@@ -123,8 +149,12 @@ export function AppEscaparate({ p }: { p: Project }) {
           <p className="mono eyebrow">Pantallas</p>
           <div className="tpl-rail" tabIndex={0} aria-label="Pantallas de la app, desliza para ver más">
             {imgs.map((src, i) => (
-              <figure key={src + i} className="tpl-rail-item rv">
-                <Phone className="phone--static" image={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, pantalla ${i + 1}`} />
+              <figure key={src + i} className={`tpl-rail-item rv ${pair[src] ? "tpl-rail-item--pair" : ""}`}>
+                {pair[src] ? (
+                  <EcoPair p={p} desk={pair[src]} phone={src} alt={caps[src] ? `${p.title} en escritorio y celular: ${caps[src]}` : `${p.title}, pantalla ${i + 1} en escritorio y celular`} />
+                ) : (
+                  <Phone className="phone--static" image={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, pantalla ${i + 1}`} />
+                )}
                 <figcaption>
                   <span className="mono">{pad2(i)}</span>
                   {caps[src] && <p className="tpl-rail-text">{caps[src]}</p>}
@@ -158,6 +188,7 @@ export function AppHistoria({ p }: { p: Project }) {
   const story = lines(p.description);
   const caps = captions(p);
   const hasCaps = Object.keys(caps).length > 0;
+  const pair = pairs(p);
   return (
     <>
       <section className="tpl-hero tpl-hero--center">
@@ -173,8 +204,12 @@ export function AppHistoria({ p }: { p: Project }) {
       <Ecosistema p={p} />
       {imgs.map((src, i) => (
         <section key={src + i} className={`tpl-story ${i % 2 ? "tpl-story--rev" : ""}`}>
-          <div className="tpl-story-device rv">
-            <Phone className="phone--static" image={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, pantalla ${i + 1}`} scroll="vertical" scrollClassName="shot-view" />
+          <div className={`tpl-story-device rv ${pair[src] ? "tpl-story-device--pair" : ""}`}>
+            {pair[src] ? (
+              <EcoPair p={p} desk={pair[src]} phone={src} alt={caps[src] ? `${p.title} en escritorio y celular: ${caps[src]}` : `${p.title}, pantalla ${i + 1} en escritorio y celular`} />
+            ) : (
+              <Phone className="phone--static" image={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, pantalla ${i + 1}`} scroll="vertical" scrollClassName="shot-view" />
+            )}
           </div>
           <div className="tpl-story-copy rv">
             <span className="tpl-num">{pad2(i)}</span>
