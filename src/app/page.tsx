@@ -4,7 +4,7 @@ import { Browser, Phone, Tablet } from "@/components/Devices";
 import { HeroDevices, type HeroItem } from "@/components/HeroDevices";
 import { HeroVideo } from "@/components/HeroVideo";
 import { JsonLd } from "@/components/JsonLd";
-import { TitleLogo } from "@/components/TitleLogo";
+import { TitleRow } from "@/components/TitleLogo";
 import { getSettings } from "@/lib/get-settings";
 import { heroData, heroLook, isLiquid, heroPicks, heroSlides, whatsappLink, type SectionId } from "@/lib/settings";
 import { ContactForm } from "@/components/ContactForm";
@@ -45,6 +45,7 @@ export default async function Home() {
       bg: p.hero_bg || undefined,
       sticker: parseSticker(p.sticker) ?? undefined,
       logo: p.logo || undefined,
+      logoColor: p.logo_color || undefined,
     }));
 
   // Sin imagen o video subido (o sin proyectos para la portada Web · App · Diseño), la portada vuelve al logo.
@@ -120,10 +121,9 @@ export default async function Home() {
                 <Link key={p.id} href={`/proyectos/${p.slug}`} className="card rv">
                   <span className="mono">{p.summary || "Diseño"}</span>
                   <div className="card-media">{p.cover_url && <img src={p.cover_url} alt="" loading="lazy" />}</div>
-                  <h3>
-                    <TitleLogo src={p.logo} />
-                    {p.title}
-                  </h3>
+                  <TitleRow src={p.logo} color={p.logo_color} size="sm">
+                    <h3>{p.title}</h3>
+                  </TitleRow>
                 </Link>
               ))}
             </div>
@@ -286,10 +286,9 @@ function AppScene({ project: p, index, id }: { project: Project; index: string; 
       <div className="stage app-stage" style={{ perspective: 1200 }}>
         <div className="scene-copy anim k-txt">
           <p className="mono eyebrow">{index} — App</p>
-          <h2 className="h2">
-            <TitleLogo src={p.logo} />
-            {p.title}
-          </h2>
+          <TitleRow src={p.logo} color={p.logo_color} size="md">
+            <h2 className="h2">{p.title}</h2>
+          </TitleRow>
           {p.summary && <p className="scene-sum">{p.summary}</p>}
           <Link className="mono" href={`/proyectos/${p.slug}`}>
             Ver proyecto →
@@ -319,12 +318,13 @@ function WebScene({ project: p, index, id }: { project: Project; index: string; 
       <div className="stage" style={{ perspective: 1400 }}>
         <div className="scene-copy scene-copy--center anim k-txt">
           <p className="mono eyebrow">{index} — Web en todas las pantallas</p>
-          <h2 className="h2">
-            <Link href={`/proyectos/${p.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
-              <TitleLogo src={p.logo} />
-              {p.title}
-            </Link>
-          </h2>
+          <TitleRow src={p.logo} color={p.logo_color} size="md" center>
+            <h2 className="h2">
+              <Link href={`/proyectos/${p.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
+                {p.title}
+              </Link>
+            </h2>
+          </TitleRow>
         </div>
         <Browser className="anim k-br" siteClassName="anim k-site" image={p.cover_url} url={p.link} title={p.title} alt={`${p.title} en escritorio`} />
         <Tablet className="anim k-tab" image={tablet} alt={`${p.title} en tablet`} />

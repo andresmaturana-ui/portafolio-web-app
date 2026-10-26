@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { StickerBadge } from "@/components/StickerBadge";
+import { TitleLogo } from "@/components/TitleLogo";
 import { CATEGORIES, DEFAULT_TEMPLATE, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
 import { saveProject, type FormState } from "./actions";
 
@@ -24,6 +25,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const [heroBg, setHeroBg] = useState(project?.hero_bg ?? "");
   const [sticker, setSticker] = useState<Sticker | null>(parseSticker(project?.sticker));
   const [logo, setLogo] = useState(project?.logo ?? "");
+  const [logoColor, setLogoColor] = useState(project?.logo_color ?? "");
   const editSticker = (patch: Partial<Sticker>) => setSticker((prev) => (prev ? { ...prev, ...patch } : prev));
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
@@ -69,6 +71,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       <input type="hidden" name="desktop" value={JSON.stringify(desktop)} />
       <input type="hidden" name="hero_bg" value={heroBg} />
       <input type="hidden" name="logo" value={logo} />
+      <input type="hidden" name="logo_color" value={logoColor} />
       <input type="hidden" name="sticker" value={sticker ? JSON.stringify(sticker) : ""} />
 
       {state.error && <div className="notice notice--error" role="alert">{state.error}</div>}
@@ -262,16 +265,27 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
         <div className="field">
           <span className="label">Logo junto al nombre (opcional)</span>
           <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
-            Logo chico que aparece en la misma línea del nombre del proyecto: en el inicio, en su página y en la portada. Mejor PNG o SVG con fondo
-            transparente.
+            Va en la línea del nombre del proyecto, a la derecha de la página: en el inicio, en su página y en la portada. Mejor SVG o PNG con fondo
+            transparente; así también puedes pintarlo de un color.
           </span>
         </div>
         {logo && (
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: 28, fontWeight: 700 }}>
-              <img className="title-logo" src={logo} alt="Logo del proyecto" />
-              Nombre
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 40, padding: 12, borderRadius: 12, background: "var(--bg)" }}>
+              <TitleLogo src={logo} color={logoColor || null} />
             </span>
+            <div className="field">
+              <span className="label">Color del logo</span>
+              <div className="sticker-colors">
+                <button type="button" className={`btn ${logoColor ? "btn--ghost" : ""}`} onClick={() => setLogoColor("")}>
+                  Original
+                </button>
+                {STICKER_COLORS.map((c) => (
+                  <button key={c} type="button" className={`sticker-swatch ${logoColor === c ? "is-on" : ""}`} style={{ background: c }} onClick={() => setLogoColor(c)} aria-label={`Color ${c}`} />
+                ))}
+                <input type="color" value={logoColor || "#ffffff"} onChange={(e) => setLogoColor(e.target.value)} aria-label="Otro color" />
+              </div>
+            </div>
             <button type="button" className="btn btn--danger" onClick={() => setLogo("")}>
               Quitar logo
             </button>

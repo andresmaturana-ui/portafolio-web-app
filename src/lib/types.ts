@@ -30,6 +30,8 @@ export type Project = {
   hero_bg?: string | null;
   /* Logo chico que va en la misma línea del nombre del proyecto */
   logo?: string | null;
+  /* Color con que se pinta ese logo (vacío = sus colores originales) */
+  logo_color?: string | null;
   /* Logo del proyecto como sticker circular (JSON de Sticker) */
   sticker?: string | null;
   created_at?: string;

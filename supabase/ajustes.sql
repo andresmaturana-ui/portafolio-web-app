@@ -83,3 +83,4 @@ alter table public.portfolio_projects add column if not exists hero_bg text;
 alter table public.portfolio_projects add column if not exists sticker text;
 -- Logo chico junto al nombre del proyecto
 alter table public.portfolio_projects add column if not exists logo text;
+alter table public.portfolio_projects add column if not exists logo_color text;
