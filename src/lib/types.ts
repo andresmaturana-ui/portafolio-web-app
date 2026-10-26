@@ -36,6 +36,8 @@ export type Project = {
   logo_opts?: string | null;
   /* Logo del proyecto como sticker circular (JSON de Sticker) */
   sticker?: string | null;
+  /* Texto de cada imagen (celular o escritorio): JSON { "url de la imagen": "texto" } */
+  captions?: string | null;
   created_at?: string;
 };
 
@@ -61,7 +63,7 @@ export function templateFor(project: Pick<Project, "category" | "template">): Te
   return t ? t.value : DEFAULT_TEMPLATE[project.category];
 }
 
-// Logo del proyecto como sticker circular sobre la portada y la página del proyecto.
+// Logo del proyecto como sticker circular sobre la portada líquida.
 export type StickerSize = "s" | "m" | "l";
 // border: borde blanco de sticker recortado (por defecto, sin borde). logo: tamaño del logo dentro del círculo, en % (30–100).
 export type Sticker = { src: string; size: StickerSize; color: string; style: "pegado" | "despegado"; border: boolean; logo: number };
@@ -92,6 +94,20 @@ export function parseSticker(raw: unknown): Sticker | null {
 // Logo junto al nombre: "derecha" = nombre y logo en el extremo derecho; "solo" = el logo en lugar del nombre.
 // size: tamaño en % del normal (40–250).
 export type LogoOpts = { mode: "derecha" | "solo"; size: number };
+export function parseCaptions(raw: unknown): Record<string, string> {
+  try {
+    const d = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!d || typeof d !== "object" || Array.isArray(d)) return {};
+    return Object.fromEntries(
+      Object.entries(d as Record<string, unknown>)
+        .filter(([k, v]) => k && typeof v === "string" && v.trim())
+        .map(([k, v]) => [k, (v as string).trim().slice(0, 600)]),
+    );
+  } catch {
+    return {};
+  }
+}
+
 export function parseLogoOpts(raw: unknown): LogoOpts {
   try {
     const d = typeof raw === "string" ? JSON.parse(raw) : raw;

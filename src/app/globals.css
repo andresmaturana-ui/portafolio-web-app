@@ -713,3 +713,19 @@ img { display: block; max-width: 100%; }
 .title-only--lg .title-logo--only { height: calc(clamp(64px, 10vw, 150px) * var(--logo-scale, 1)); }
 .title-only--md .title-logo--only { height: calc(clamp(44px, 6vw, 84px) * var(--logo-scale, 1)); }
 .title-only--sm .title-logo--only { height: calc(40px * var(--logo-scale, 1)); }
+
+/* Admin: cada imagen con su número y su texto */
+.thumbs--cards { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); align-items: start; }
+.thumbs--cards.thumbs--wide { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.thumb-card { display: grid; gap: 8px; }
+.thumb-num { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.thumb-num .input { padding: 6px 10px; width: auto; flex: 1; }
+.thumb-text.textarea { min-height: 0; font-size: 14px; padding: 8px 10px; }
+/* Página del proyecto: texto de cada imagen */
+.tpl-rail-item figcaption { display: grid; justify-items: center; gap: 8px; max-width: clamp(200px, 22vw, 270px); text-align: center; }
+.tpl-rail-text { margin: 0; font-size: 15px; line-height: 1.45; color: var(--muted, inherit); }
+.tpl-eco-cap { display: grid; gap: 6px; max-width: 640px; margin: clamp(16px, 2vw, 24px) 0 0 auto; width: 86%; }
+.tpl-eco-cap p { margin: 0; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.5; }
+.tpl-eco-item { margin: 0; }
+.tpl-eco-item .tpl-eco-cap { margin-left: 0; width: auto; }
+.tpl-shot-cap { margin: 0; padding: 12px 16px; font-size: 15px; line-height: 1.5; }

@@ -1,12 +1,17 @@
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { FitBrowser } from "@/components/FitBrowser";
 import { TitleRow } from "@/components/TitleLogo";
-import { CATEGORIES, type Project } from "@/lib/types";
+import { CATEGORIES, parseCaptions, type Project } from "@/lib/types";
 
 const pad2 = (n: number) => String(n + 1).padStart(2, "0");
 
 function images(p: Project) {
   return [p.cover_url, ...p.gallery].filter(Boolean) as string[];
+}
+
+// Texto que el admin escribió para cada imagen (por su URL).
+function captions(p: Project) {
+  return parseCaptions(p.captions);
 }
 
 function lines(text: string) {
@@ -41,18 +46,32 @@ function Ecosistema({ p }: { p: Project }) {
   const desk = (p.desktop ?? []).filter(Boolean);
   if (!desk.length) return null;
   const phone = images(p);
+  const caps = captions(p);
+  const Caption = ({ i }: { i: number }) =>
+    desk.length > 1 || caps[desk[i]] ? (
+      <div className="tpl-eco-cap rv">
+        <span className="mono">Escritorio {pad2(i)}</span>
+        {caps[desk[i]] && <p>{caps[desk[i]]}</p>}
+      </div>
+    ) : null;
   return (
     <section className="tpl-section">
       <p className="mono eyebrow">Ecosistema</p>
       <h2 className="tpl-eco-title">En el celular y en el escritorio</h2>
       <div className="tpl-eco rv">
-        <FitBrowser image={desk[0]} url={p.link} title={p.title} alt={`${p.title} en escritorio`} />
+        <FitBrowser image={desk[0]} url={p.link} title={p.title} alt={caps[desk[0]] ? `${p.title} en escritorio: ${caps[desk[0]]}` : `${p.title} en escritorio`} />
         {phone[0] && <Phone className="phone--static tpl-eco-phone" image={phone[0]} alt={`${p.title} en el celular`} />}
       </div>
+      <Caption i={0} />
       {desk.length > 1 && (
         <div className="tpl-eco-more">
           {desk.slice(1).map((src, i) => (
-            <FitBrowser key={src + i} className="rv" image={src} url={p.link} title={p.title} alt={`${p.title} en escritorio, pantalla ${i + 2}`} />
+            <figure key={src + i} className="tpl-eco-item">
+              <FitBrowser className="rv" image={src} url={p.link} title={p.title} alt={caps[src] ? `${p.title} en escritorio: ${caps[src]}` : `${p.title} en escritorio, pantalla ${i + 2}`} />
+              <figcaption>
+                <Caption i={i + 1} />
+              </figcaption>
+            </figure>
           ))}
         </div>
       )}
@@ -63,6 +82,7 @@ function Ecosistema({ p }: { p: Project }) {
 /* ---------- App · Escaparate ---------- */
 export function AppEscaparate({ p }: { p: Project }) {
   const imgs = images(p);
+  const caps = captions(p);
   const features = lines(p.description);
   return (
     <>
@@ -104,8 +124,11 @@ export function AppEscaparate({ p }: { p: Project }) {
           <div className="tpl-rail" tabIndex={0} aria-label="Pantallas de la app, desliza para ver más">
             {imgs.map((src, i) => (
               <figure key={src + i} className="tpl-rail-item rv">
-                <Phone className="phone--static" image={src} alt={`${p.title}, pantalla ${i + 1}`} />
-                <figcaption className="mono">{pad2(i)}</figcaption>
+                <Phone className="phone--static" image={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, pantalla ${i + 1}`} />
+                <figcaption>
+                  <span className="mono">{pad2(i)}</span>
+                  {caps[src] && <p className="tpl-rail-text">{caps[src]}</p>}
+                </figcaption>
               </figure>
             ))}
           </div>
@@ -133,6 +156,8 @@ export function AppEscaparate({ p }: { p: Project }) {
 export function AppHistoria({ p }: { p: Project }) {
   const imgs = images(p);
   const story = lines(p.description);
+  const caps = captions(p);
+  const hasCaps = Object.keys(caps).length > 0;
   return (
     <>
       <section className="tpl-hero tpl-hero--center">
@@ -149,11 +174,11 @@ export function AppHistoria({ p }: { p: Project }) {
       {imgs.map((src, i) => (
         <section key={src + i} className={`tpl-story ${i % 2 ? "tpl-story--rev" : ""}`}>
           <div className="tpl-story-device rv">
-            <Phone className="phone--static" image={src} alt={`${p.title}, pantalla ${i + 1}`} scroll="vertical" scrollClassName="shot-view" />
+            <Phone className="phone--static" image={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, pantalla ${i + 1}`} scroll="vertical" scrollClassName="shot-view" />
           </div>
           <div className="tpl-story-copy rv">
             <span className="tpl-num">{pad2(i)}</span>
-            <p>{story[i] ?? (i === 0 ? p.summary : "")}</p>
+            <p>{hasCaps ? caps[src] ?? "" : story[i] ?? (i === 0 ? p.summary : "")}</p>
           </div>
         </section>
       ))}
@@ -223,13 +248,19 @@ export function WebGaleria({ p }: { p: Project }) {
 }
 
 function ShotStack({ p, from }: { p: Project; from: number }) {
+  const caps = captions(p);
   return (
     <section className="tpl-section tpl-stack">
       {images(p)
         .slice(from)
         .map((src, i) => (
           <figure key={src + i} className="tpl-shot rv">
-            <img src={src} alt={`${p.title}, imagen ${from + i + 1}`} loading={i ? "lazy" : "eager"} />
+            <img src={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, imagen ${from + i + 1}`} loading={i ? "lazy" : "eager"} />
+            {caps[src] && (
+              <figcaption className="tpl-shot-cap">
+                <span className="mono">{pad2(from + i)}</span> {caps[src]}
+              </figcaption>
+            )}
           </figure>
         ))}
     </section>

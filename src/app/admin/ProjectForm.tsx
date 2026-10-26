@@ -5,11 +5,11 @@ import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { StickerBadge } from "@/components/StickerBadge";
 import { TitleLogo } from "@/components/TitleLogo";
-import { CATEGORIES, DEFAULT_TEMPLATE, parseLogoOpts, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
+import { CATEGORIES, DEFAULT_TEMPLATE, parseCaptions, parseLogoOpts, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
 import { saveProject, type FormState } from "./actions";
 
 const IMAGE_HINTS: Record<Category, string> = {
-  app: "1ª imagen: pantalla principal (celular central). 2ª y 3ª: pantallas de los celulares laterales. El resto se ve en el detalle.",
+  app: "Cada imagen lleva su número (01, 02…), el mismo que se ve en la página del proyecto. Cámbialo con «Número» y escribe abajo qué muestra esa pantalla. La 01 es la pantalla principal; la 02 y la 03 van en los celulares laterales de la portada.",
   web: "1ª imagen: captura de escritorio (puede ser larga, se desplaza con el scroll). 2ª: versión tablet. 3ª: versión móvil.",
   diseno: "1ª imagen: portada de la tarjeta. El resto se ve en el detalle del proyecto.",
   foto: "1ª imagen: la foto que aparece en la cinta de fotografía. El resto forma la serie en el detalle.",
@@ -27,6 +27,15 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const [logo, setLogo] = useState(project?.logo ?? "");
   const [logoColor, setLogoColor] = useState(project?.logo_color ?? "");
   const [logoOpts, setLogoOpts] = useState(() => parseLogoOpts(project?.logo_opts));
+  // Texto de cada imagen. Los proyectos «App · Historia» guardados antes tenían ese texto en las líneas de la descripción.
+  const [captions, setCaptions] = useState<Record<string, string>>(() => {
+    const saved = parseCaptions(project?.captions);
+    if (Object.keys(saved).length || !project || project.template !== "app-historia") return saved;
+    const lines = project.description.split("\n").map((l) => l.trim()).filter(Boolean);
+    const imgs = [project.cover_url, ...project.gallery].filter(Boolean) as string[];
+    return Object.fromEntries(imgs.flatMap((src, i) => (lines[i] ? [[src, lines[i]]] : [])));
+  });
+  const setCaption = (src: string, text: string) => setCaptions((prev) => ({ ...prev, [src]: text }));
   const editSticker = (patch: Partial<Sticker>) => setSticker((prev) => (prev ? { ...prev, ...patch } : prev));
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
@@ -64,12 +73,21 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       return next;
     });
   const remove = (i: number) => setImages((prev) => prev.filter((_, j) => j !== i));
+  const moveDesktop = (i: number, to: number) =>
+    setDesktop((prev) => {
+      const next = [...prev];
+      const [item] = next.splice(i, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  const num = (i: number) => String(i + 1).padStart(2, "0");
 
   return (
     <form action={formAction} className="form">
       {project && <input type="hidden" name="id" value={project.id} />}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
       <input type="hidden" name="desktop" value={JSON.stringify(desktop)} />
+      <input type="hidden" name="captions" value={JSON.stringify(captions)} />
       <input type="hidden" name="hero_bg" value={heroBg} />
       <input type="hidden" name="logo" value={logo} />
       <input type="hidden" name="logo_color" value={logoColor} />
@@ -143,7 +161,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       </div>
 
       <div className="field">
-        <label htmlFor="description">Descripción (cada línea se muestra como un punto o junto a una pantalla)</label>
+        <label htmlFor="description">Descripción (en apps, cada línea es un punto numerado de «Qué hace»; el texto de cada pantalla se escribe abajo, en su imagen)</label>
         <textarea className="textarea" id="description" name="description" defaultValue={project?.description} />
       </div>
 
@@ -168,11 +186,12 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
           <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>{IMAGE_HINTS[category]}</span>
         </div>
         {images.length > 0 && (
-          <div className="thumbs">
+          <div className="thumbs thumbs--cards">
             {images.map((src, i) => (
-              <div key={src + i} className="thumb">
+              <div key={src + i} className="thumb-card">
+              <div className="thumb">
                 <img src={src} alt={`Imagen ${i + 1}`} />
-                {i === 0 && <span className="thumb-badge">Portada</span>}
+                <span className="thumb-badge">{i === 0 ? `${num(i)} · Portada` : num(i)}</span>
                 <div className="thumb-actions">
                   {i > 0 && (
                     <button type="button" onClick={() => move(i, i - 1)} aria-label="Mover antes">
@@ -188,6 +207,25 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
                     ✕
                   </button>
                 </div>
+              </div>
+                <label className="thumb-num">
+                  Número
+                  <select className="input" value={i} onChange={(e) => move(i, Number(e.target.value))}>
+                    {images.map((_, j) => (
+                      <option key={j} value={j}>
+                        {num(j)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <textarea
+                  className="textarea thumb-text"
+                  rows={3}
+                  placeholder={`Texto del ${num(i)} (opcional)`}
+                  aria-label={`Texto de la imagen ${num(i)}`}
+                  value={captions[src] ?? ""}
+                  onChange={(e) => setCaption(src, e.target.value)}
+                />
               </div>
             ))}
           </div>
@@ -223,15 +261,17 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
           <div className="field">
             <span className="label">Versión escritorio (opcional)</span>
             <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
-              Si la app también se usa en el computador, sube aquí sus capturas. En la página del proyecto se muestra el ecosistema: el escritorio junto al
-              celular. La 1ª va en el navegador grande y también aparece en la portada líquida.
+              Si la app también se usa en el computador, sube aquí sus capturas y explica cada una. En la página del proyecto van en la sección
+              «Ecosistema», numeradas (Escritorio 01, 02…) con su texto. La 01 va en el navegador grande junto al celular y también aparece en la portada líquida.
             </span>
           </div>
           {desktop.length > 0 && (
-            <div className="thumbs">
+            <div className="thumbs thumbs--cards thumbs--wide">
               {desktop.map((src, i) => (
-                <div key={src + i} className="thumb thumb--wide">
+                <div key={src + i} className="thumb-card">
+                <div className="thumb thumb--wide">
                   <img src={src} alt={`Escritorio ${i + 1}`} />
+                  <span className="thumb-badge">Escritorio {num(i)}</span>
                   <div className="thumb-actions">
                     {i > 0 && (
                       <button type="button" onClick={() => setDesktop((prev) => [prev[i], ...prev.filter((_, j) => j !== i)])}>
@@ -242,6 +282,25 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
                       ✕
                     </button>
                   </div>
+                </div>
+                  <label className="thumb-num">
+                    Número
+                    <select className="input" value={i} onChange={(e) => moveDesktop(i, Number(e.target.value))}>
+                      {desktop.map((_, j) => (
+                        <option key={j} value={j}>
+                          Escritorio {num(j)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <textarea
+                    className="textarea thumb-text"
+                    rows={3}
+                    placeholder={`Qué se ve en Escritorio ${num(i)} (opcional)`}
+                    aria-label={`Texto de escritorio ${num(i)}`}
+                    value={captions[src] ?? ""}
+                    onChange={(e) => setCaption(src, e.target.value)}
+                  />
                 </div>
               ))}
             </div>

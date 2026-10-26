@@ -6,7 +6,7 @@ import { slugify } from "@/lib/projects";
 import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseHiddenSections, parseServices, parseSectionOrder, SETTINGS_TABLE, serializeSections, type Settings } from "@/lib/settings";
 import { MESSAGES_TABLE, TABLE } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORIES, parseLogoOpts, parseSticker, type Category } from "@/lib/types";
+import { CATEGORIES, parseCaptions, parseLogoOpts, parseSticker, type Category } from "@/lib/types";
 
 export type FormState = { error?: string };
 
@@ -52,6 +52,11 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
       const o = parseLogoOpts(String(formData.get("logo_opts") ?? ""));
       return o.mode === "derecha" && o.size === 100 ? null : JSON.stringify(o);
     })(),
+    captions: (() => {
+      const used = new Set([...images, ...desktop]);
+      const c = Object.fromEntries(Object.entries(parseCaptions(String(formData.get("captions") ?? ""))).filter(([k]) => used.has(k)));
+      return Object.keys(c).length ? JSON.stringify(c) : null;
+    })(),
     sticker: (() => {
       const st = parseSticker(String(formData.get("sticker") ?? ""));
       return st ? JSON.stringify(st) : null;
@@ -64,13 +69,13 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   let { error } = await write(record);
   // Base de datos sin las columnas nuevas (falta correr el SQL nuevo): guarda igual sin ellas.
   let missingDesktop = false;
-  if (error && /desktop|hero_bg|sticker|logo/.test(error.message)) {
-    const { desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, logo_opts: _lo, ...rest } = record;
+  if (error && /desktop|hero_bg|sticker|logo|captions/.test(error.message)) {
+    const { desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, logo_opts: _lo, captions: _c, ...rest } = record;
     ({ error } = await write(rest));
-    missingDesktop = !error && (desktop.length > 0 || !!record.hero_bg || !!record.sticker || !!record.logo);
+    missingDesktop = !error && (desktop.length > 0 || !!record.hero_bg || !!record.sticker || !!record.logo || !!record.captions);
   }
   if (error && /template|scroll/.test(error.message)) {
-    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, logo_opts: _lo, ...rest } = record;
+    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, logo_opts: _lo, captions: _c, ...rest } = record;
     ({ error } = await write(rest));
   }
 
@@ -82,7 +87,7 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   revalidatePath("/");
   revalidatePath(`/proyectos/${record.slug}`);
   if (missingDesktop) {
-    return { error: "Se guardó el proyecto, pero no las capturas de escritorio, el fondo de portada, el sticker ni el logo: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase y guarda otra vez." };
+    return { error: "Se guardó el proyecto, pero no las capturas de escritorio, los textos de las imágenes, el fondo de portada, el sticker ni el logo: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase y guarda otra vez." };
   }
   redirect(`/admin?cat=${category}`);
 }

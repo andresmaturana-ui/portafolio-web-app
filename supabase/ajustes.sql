@@ -85,3 +85,4 @@ alter table public.portfolio_projects add column if not exists sticker text;
 alter table public.portfolio_projects add column if not exists logo text;
 alter table public.portfolio_projects add column if not exists logo_color text;
 alter table public.portfolio_projects add column if not exists logo_opts text;
+alter table public.portfolio_projects add column if not exists captions text;
