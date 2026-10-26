@@ -28,6 +28,8 @@ export type Project = {
   desktop?: string[] | null;
   /* Imagen de fondo para la portada líquida (vacía = la portada del proyecto) */
   hero_bg?: string | null;
+  /* Logo chico que va en la misma línea del nombre del proyecto */
+  logo?: string | null;
   /* Logo del proyecto como sticker circular (JSON de Sticker) */
   sticker?: string | null;
   created_at?: string;

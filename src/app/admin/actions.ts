@@ -46,6 +46,7 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
     gallery: images.slice(1),
     desktop,
     hero_bg: String(formData.get("hero_bg") ?? "").trim() || null,
+    logo: String(formData.get("logo") ?? "").trim() || null,
     sticker: (() => {
       const st = parseSticker(String(formData.get("sticker") ?? ""));
       return st ? JSON.stringify(st) : null;
@@ -58,13 +59,13 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   let { error } = await write(record);
   // Base de datos sin las columnas nuevas (falta correr el SQL nuevo): guarda igual sin ellas.
   let missingDesktop = false;
-  if (error && /desktop|hero_bg|sticker/.test(error.message)) {
-    const { desktop: _d, hero_bg: _b, sticker: _k, ...rest } = record;
+  if (error && /desktop|hero_bg|sticker|logo/.test(error.message)) {
+    const { desktop: _d, hero_bg: _b, sticker: _k, logo: _l, ...rest } = record;
     ({ error } = await write(rest));
-    missingDesktop = !error && (desktop.length > 0 || !!record.hero_bg || !!record.sticker);
+    missingDesktop = !error && (desktop.length > 0 || !!record.hero_bg || !!record.sticker || !!record.logo);
   }
   if (error && /template|scroll/.test(error.message)) {
-    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, sticker: _k, ...rest } = record;
+    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, sticker: _k, logo: _l, ...rest } = record;
     ({ error } = await write(rest));
   }
 
@@ -76,7 +77,7 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   revalidatePath("/");
   revalidatePath(`/proyectos/${record.slug}`);
   if (missingDesktop) {
-    return { error: "Se guardó el proyecto, pero no las capturas de escritorio, el fondo de portada ni el sticker: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase y guarda otra vez." };
+    return { error: "Se guardó el proyecto, pero no las capturas de escritorio, el fondo de portada, el sticker ni el logo: vuelve a correr supabase/ajustes.sql en el SQL Editor de Supabase y guarda otra vez." };
   }
   redirect(`/admin?cat=${category}`);
 }

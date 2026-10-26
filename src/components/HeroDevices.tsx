@@ -22,6 +22,8 @@ export type HeroItem = {
   bg?: string;
   /* Logo del proyecto como sticker */
   sticker?: Sticker;
+  /* Logo chico junto al nombre */
+  logo?: string;
 };
 
 // Dónde va el proyecto según el scroll dentro de la sección. Cada uno tiene su tramo: primero queda al
@@ -48,6 +50,7 @@ function Caption({ item, index, total }: { item?: HeroItem; index: number; total
   return (
     <p className="hd-caption mono anim k-hd-cap" aria-live="polite">
       <span className="hd-kind">{KIND_LABEL[item.kind]}</span>
+      {item.logo && <img className="title-logo" src={item.logo} alt="" aria-hidden="true" />}
       {item.title}
       <span className="hd-count">
         {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}

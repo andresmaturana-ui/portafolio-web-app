@@ -23,6 +23,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const [desktop, setDesktop] = useState<string[]>(project?.desktop ?? []);
   const [heroBg, setHeroBg] = useState(project?.hero_bg ?? "");
   const [sticker, setSticker] = useState<Sticker | null>(parseSticker(project?.sticker));
+  const [logo, setLogo] = useState(project?.logo ?? "");
   const editSticker = (patch: Partial<Sticker>) => setSticker((prev) => (prev ? { ...prev, ...patch } : prev));
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
@@ -67,6 +68,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       <input type="hidden" name="images" value={JSON.stringify(images)} />
       <input type="hidden" name="desktop" value={JSON.stringify(desktop)} />
       <input type="hidden" name="hero_bg" value={heroBg} />
+      <input type="hidden" name="logo" value={logo} />
       <input type="hidden" name="sticker" value={sticker ? JSON.stringify(sticker) : ""} />
 
       {state.error && <div className="notice notice--error" role="alert">{state.error}</div>}
@@ -255,6 +257,47 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
           </div>
         </div>
       )}
+
+      <div className="uploader">
+        <div className="field">
+          <span className="label">Logo junto al nombre (opcional)</span>
+          <span className="mono" style={{ textTransform: "none", letterSpacing: 0, fontSize: 13 }}>
+            Logo chico que aparece en la misma línea del nombre del proyecto: en el inicio, en su página y en la portada. Mejor PNG o SVG con fondo
+            transparente.
+          </span>
+        </div>
+        {logo && (
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <span style={{ fontSize: 28, fontWeight: 700 }}>
+              <img className="title-logo" src={logo} alt="Logo del proyecto" />
+              Nombre
+            </span>
+            <button type="button" className="btn btn--danger" onClick={() => setLogo("")}>
+              Quitar logo
+            </button>
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div className="field">
+            <label htmlFor="logo-file">{logo ? "Cambiar logo" : "Subir logo"}</label>
+            <input
+              className="input"
+              id="logo-file"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                onFiles(e.target.files, (url) => setLogo(url));
+                e.target.value = "";
+              }}
+            />
+          </div>
+          {sticker && sticker.src !== logo && (
+            <button type="button" className="btn btn--ghost" onClick={() => setLogo(sticker.src)}>
+              Usar el mismo del sticker
+            </button>
+          )}
+        </div>
+      </div>
 
       {category !== "foto" && (
         <div className="uploader">

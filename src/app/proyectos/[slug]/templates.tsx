@@ -1,5 +1,6 @@
 import { Browser, Phone, Tablet } from "@/components/Devices";
 import { FitBrowser } from "@/components/FitBrowser";
+import { TitleLogo } from "@/components/TitleLogo";
 import { CATEGORIES, type Project } from "@/lib/types";
 
 const pad2 = (n: number) => String(n + 1).padStart(2, "0");
@@ -68,7 +69,10 @@ export function AppEscaparate({ p }: { p: Project }) {
       <section className="tpl-hero tpl-hero--split">
         <div className="tpl-hero-copy">
           <Meta p={p} />
-          <h1 className="tpl-title">{p.title}</h1>
+          <h1 className="tpl-title">
+          <TitleLogo src={p.logo} />
+          {p.title}
+        </h1>
           {p.summary && <p className="tpl-lead">{p.summary}</p>}
           <div className="tpl-actions">
             <Cta p={p} label="Abrir la app ↗" />
@@ -134,7 +138,10 @@ export function AppHistoria({ p }: { p: Project }) {
     <>
       <section className="tpl-hero tpl-hero--center">
         <Meta p={p} />
-        <h1 className="tpl-title tpl-title--xl">{p.title}</h1>
+        <h1 className="tpl-title tpl-title--xl">
+          <TitleLogo src={p.logo} />
+          {p.title}
+        </h1>
         {p.summary && <p className="tpl-lead">{p.summary}</p>}
         <div className="tpl-actions" style={{ justifyContent: "center" }}>
           <Cta p={p} label="Abrir la app ↗" />
@@ -164,7 +171,10 @@ export function WebNavegador({ p }: { p: Project }) {
     <>
       <section className="tpl-hero tpl-hero--center">
         <Meta p={p} />
-        <h1 className="tpl-title">{p.title}</h1>
+        <h1 className="tpl-title">
+          <TitleLogo src={p.logo} />
+          {p.title}
+        </h1>
         {p.summary && <p className="tpl-lead">{p.summary}</p>}
         <div className="tpl-actions" style={{ justifyContent: "center" }}>
           <Cta p={p} />
@@ -198,7 +208,10 @@ export function WebGaleria({ p }: { p: Project }) {
       <section className="tpl-hero tpl-split">
         <div>
           <Meta p={p} />
-          <h1 className="tpl-title">{p.title}</h1>
+          <h1 className="tpl-title">
+          <TitleLogo src={p.logo} />
+          {p.title}
+        </h1>
         </div>
         <div>
           {p.summary && <p className="tpl-lead" style={{ marginTop: 0 }}>{p.summary}</p>}
@@ -234,7 +247,10 @@ export function FotoGaleria({ p }: { p: Project }) {
     <>
       <section className="tpl-hero tpl-hero--center">
         <Meta p={p} />
-        <h1 className="tpl-title tpl-title--xl">{p.title}</h1>
+        <h1 className="tpl-title tpl-title--xl">
+          <TitleLogo src={p.logo} />
+          {p.title}
+        </h1>
         {p.summary && <p className="tpl-lead">{p.summary}</p>}
       </section>
       <section className="tpl-section">

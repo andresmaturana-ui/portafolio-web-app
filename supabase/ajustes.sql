@@ -81,3 +81,5 @@ alter table public.portfolio_projects add column if not exists desktop text[] no
 alter table public.portfolio_projects add column if not exists hero_bg text;
 -- Logo del proyecto como sticker (JSON: imagen, tamaño, color y estilo)
 alter table public.portfolio_projects add column if not exists sticker text;
+-- Logo chico junto al nombre del proyecto
+alter table public.portfolio_projects add column if not exists logo text;
