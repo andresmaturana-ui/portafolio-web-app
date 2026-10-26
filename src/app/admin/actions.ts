@@ -6,7 +6,7 @@ import { slugify } from "@/lib/projects";
 import { DEFAULT_SETTINGS, DISPLAY_FONTS, isHex, MONO_FONTS, parseHiddenSections, parseServices, parseSectionOrder, SETTINGS_TABLE, serializeSections, type Settings } from "@/lib/settings";
 import { MESSAGES_TABLE, TABLE } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORIES, parseSticker, type Category } from "@/lib/types";
+import { CATEGORIES, parseLogoOpts, parseSticker, type Category } from "@/lib/types";
 
 export type FormState = { error?: string };
 
@@ -48,6 +48,10 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
     hero_bg: String(formData.get("hero_bg") ?? "").trim() || null,
     logo: String(formData.get("logo") ?? "").trim() || null,
     logo_color: /^#[0-9a-f]{6}$/i.test(String(formData.get("logo_color") ?? "")) ? String(formData.get("logo_color")) : null,
+    logo_opts: (() => {
+      const o = parseLogoOpts(String(formData.get("logo_opts") ?? ""));
+      return o.mode === "derecha" && o.size === 100 ? null : JSON.stringify(o);
+    })(),
     sticker: (() => {
       const st = parseSticker(String(formData.get("sticker") ?? ""));
       return st ? JSON.stringify(st) : null;
@@ -61,12 +65,12 @@ export async function saveProject(_prev: FormState, formData: FormData): Promise
   // Base de datos sin las columnas nuevas (falta correr el SQL nuevo): guarda igual sin ellas.
   let missingDesktop = false;
   if (error && /desktop|hero_bg|sticker|logo/.test(error.message)) {
-    const { desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, ...rest } = record;
+    const { desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, logo_opts: _lo, ...rest } = record;
     ({ error } = await write(rest));
     missingDesktop = !error && (desktop.length > 0 || !!record.hero_bg || !!record.sticker || !!record.logo);
   }
   if (error && /template|scroll/.test(error.message)) {
-    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, ...rest } = record;
+    const { template: _t, scroll: _s, desktop: _d, hero_bg: _b, sticker: _k, logo: _l, logo_color: _lc, logo_opts: _lo, ...rest } = record;
     ({ error } = await write(rest));
   }
 

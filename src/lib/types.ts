@@ -32,6 +32,8 @@ export type Project = {
   logo?: string | null;
   /* Color con que se pinta ese logo (vacío = sus colores originales) */
   logo_color?: string | null;
+  /* Cómo se muestra ese logo (JSON de LogoOpts) */
+  logo_opts?: string | null;
   /* Logo del proyecto como sticker circular (JSON de Sticker) */
   sticker?: string | null;
   created_at?: string;
@@ -84,5 +86,17 @@ export function parseSticker(raw: unknown): Sticker | null {
     };
   } catch {
     return null;
+  }
+}
+
+// Logo junto al nombre: "derecha" = nombre y logo en el extremo derecho; "solo" = el logo en lugar del nombre.
+// size: tamaño en % del normal (40–250).
+export type LogoOpts = { mode: "derecha" | "solo"; size: number };
+export function parseLogoOpts(raw: unknown): LogoOpts {
+  try {
+    const d = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return { mode: d?.mode === "solo" ? "solo" : "derecha", size: Math.min(250, Math.max(40, Number(d?.size) || 100)) };
+  } catch {
+    return { mode: "derecha", size: 100 };
   }
 }

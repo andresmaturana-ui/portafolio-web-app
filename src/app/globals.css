@@ -698,10 +698,20 @@ img { display: block; max-width: 100%; }
 .title-row--center { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
 .title-row > :is(h1, h2, h3) { margin-top: 0; margin-bottom: 0; }
 .title-row .title-logo--side { justify-self: end; margin: 0; max-width: none; }
-.title-row--lg .title-logo--side { height: clamp(44px, 7vw, 104px); }
-.title-row--md .title-logo--side { height: clamp(32px, 4vw, 60px); }
-.title-row--sm .title-logo--side { height: 28px; }
+.title-row--lg .title-logo--side { height: calc(clamp(44px, 7vw, 104px) * var(--logo-scale, 1)); }
+.title-row--md .title-logo--side { height: calc(clamp(32px, 4vw, 60px) * var(--logo-scale, 1)); }
+.title-row--sm .title-logo--side { height: calc(28px * var(--logo-scale, 1)); }
 @media (max-width: 760px) {
   .title-row--center { grid-template-columns: minmax(0, 1fr) auto; }
   .title-row--center > span:first-child { display: none; }
 }
+/* En las escenas del inicio el texto va en una columna angosta: la línea del nombre se estira hasta el borde derecho de la página */
+.scene-copy:not(.scene-copy--center) .title-row { width: calc(100vw - 2 * var(--pad) - 12px); }
+
+/* Modo «solo el logo»: el logo ocupa el lugar del nombre (el nombre queda oculto pero en la página, para Google). */
+.title-only { display: flex; width: 100%; }
+.title-only--center { justify-content: center; }
+.title-only .title-logo--only { margin: 0; max-width: 100%; }
+.title-only--lg .title-logo--only { height: calc(clamp(64px, 10vw, 150px) * var(--logo-scale, 1)); }
+.title-only--md .title-logo--only { height: calc(clamp(44px, 6vw, 84px) * var(--logo-scale, 1)); }
+.title-only--sm .title-logo--only { height: calc(40px * var(--logo-scale, 1)); }

@@ -5,7 +5,7 @@ import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { StickerBadge } from "@/components/StickerBadge";
 import { TitleLogo } from "@/components/TitleLogo";
-import { CATEGORIES, DEFAULT_TEMPLATE, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
+import { CATEGORIES, DEFAULT_TEMPLATE, parseLogoOpts, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
 import { saveProject, type FormState } from "./actions";
 
 const IMAGE_HINTS: Record<Category, string> = {
@@ -26,6 +26,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
   const [sticker, setSticker] = useState<Sticker | null>(parseSticker(project?.sticker));
   const [logo, setLogo] = useState(project?.logo ?? "");
   const [logoColor, setLogoColor] = useState(project?.logo_color ?? "");
+  const [logoOpts, setLogoOpts] = useState(() => parseLogoOpts(project?.logo_opts));
   const editSticker = (patch: Partial<Sticker>) => setSticker((prev) => (prev ? { ...prev, ...patch } : prev));
   const [uploading, setUploading] = useState(0);
   const [uploadError, setUploadError] = useState("");
@@ -72,6 +73,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
       <input type="hidden" name="hero_bg" value={heroBg} />
       <input type="hidden" name="logo" value={logo} />
       <input type="hidden" name="logo_color" value={logoColor} />
+      <input type="hidden" name="logo_opts" value={JSON.stringify(logoOpts)} />
       <input type="hidden" name="sticker" value={sticker ? JSON.stringify(sticker) : ""} />
 
       {state.error && <div className="notice notice--error" role="alert">{state.error}</div>}
@@ -272,8 +274,33 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
         {logo && (
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <span style={{ fontSize: 40, padding: 12, borderRadius: 12, background: "var(--bg)" }}>
-              <TitleLogo src={logo} color={logoColor || null} />
+              <span style={{ display: "inline-block", fontSize: `${(logoOpts.size / 100) * (logoOpts.mode === "solo" ? 1.5 : 1)}em` }}>
+                <TitleLogo src={logo} color={logoColor || null} />
+              </span>
             </span>
+            <div className="field">
+              <span className="label">Cómo se ve</span>
+              <div className="sticker-colors">
+                <button type="button" className={`btn ${logoOpts.mode === "derecha" ? "" : "btn--ghost"}`} onClick={() => setLogoOpts({ ...logoOpts, mode: "derecha" })}>
+                  Nombre + logo a la derecha
+                </button>
+                <button type="button" className={`btn ${logoOpts.mode === "solo" ? "" : "btn--ghost"}`} onClick={() => setLogoOpts({ ...logoOpts, mode: "solo" })}>
+                  Solo el logo (sin nombre)
+                </button>
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="logo-size">Tamaño del logo: {logoOpts.size}%</label>
+              <input
+                id="logo-size"
+                type="range"
+                min={40}
+                max={250}
+                step={5}
+                value={logoOpts.size}
+                onChange={(e) => setLogoOpts({ ...logoOpts, size: Number(e.target.value) })}
+              />
+            </div>
             <div className="field">
               <span className="label">Color del logo</span>
               <div className="sticker-colors">

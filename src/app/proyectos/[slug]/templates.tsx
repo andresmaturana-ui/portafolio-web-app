@@ -69,7 +69,7 @@ export function AppEscaparate({ p }: { p: Project }) {
       <section className="tpl-hero tpl-hero--split">
         <div className="tpl-hero-copy">
           <Meta p={p} />
-          <TitleRow src={p.logo} color={p.logo_color}>
+          <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts}>
           <h1 className="tpl-title">{p.title}</h1>
         </TitleRow>
           {p.summary && <p className="tpl-lead">{p.summary}</p>}
@@ -137,7 +137,7 @@ export function AppHistoria({ p }: { p: Project }) {
     <>
       <section className="tpl-hero tpl-hero--center">
         <Meta p={p} />
-        <TitleRow src={p.logo} color={p.logo_color} center>
+        <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts} center>
           <h1 className="tpl-title tpl-title--xl">{p.title}</h1>
         </TitleRow>
         {p.summary && <p className="tpl-lead">{p.summary}</p>}
@@ -169,7 +169,7 @@ export function WebNavegador({ p }: { p: Project }) {
     <>
       <section className="tpl-hero tpl-hero--center">
         <Meta p={p} />
-        <TitleRow src={p.logo} color={p.logo_color} center>
+        <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts} center>
           <h1 className="tpl-title">{p.title}</h1>
         </TitleRow>
         {p.summary && <p className="tpl-lead">{p.summary}</p>}
@@ -205,7 +205,7 @@ export function WebGaleria({ p }: { p: Project }) {
       <section className="tpl-hero tpl-split">
         <div>
           <Meta p={p} />
-          <TitleRow src={p.logo} color={p.logo_color}>
+          <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts}>
           <h1 className="tpl-title">{p.title}</h1>
         </TitleRow>
         </div>
@@ -243,7 +243,7 @@ export function FotoGaleria({ p }: { p: Project }) {
     <>
       <section className="tpl-hero tpl-hero--center">
         <Meta p={p} />
-        <TitleRow src={p.logo} color={p.logo_color} center>
+        <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts} center>
           <h1 className="tpl-title tpl-title--xl">{p.title}</h1>
         </TitleRow>
         {p.summary && <p className="tpl-lead">{p.summary}</p>}

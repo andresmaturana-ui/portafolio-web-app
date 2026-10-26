@@ -121,7 +121,7 @@ export default async function Home() {
                 <Link key={p.id} href={`/proyectos/${p.slug}`} className="card rv">
                   <span className="mono">{p.summary || "Diseño"}</span>
                   <div className="card-media">{p.cover_url && <img src={p.cover_url} alt="" loading="lazy" />}</div>
-                  <TitleRow src={p.logo} color={p.logo_color} size="sm">
+                  <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts} size="sm">
                     <h3>{p.title}</h3>
                   </TitleRow>
                 </Link>
@@ -286,7 +286,7 @@ function AppScene({ project: p, index, id }: { project: Project; index: string; 
       <div className="stage app-stage" style={{ perspective: 1200 }}>
         <div className="scene-copy anim k-txt">
           <p className="mono eyebrow">{index} — App</p>
-          <TitleRow src={p.logo} color={p.logo_color} size="md">
+          <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts} size="md">
             <h2 className="h2">{p.title}</h2>
           </TitleRow>
           {p.summary && <p className="scene-sum">{p.summary}</p>}
@@ -318,7 +318,7 @@ function WebScene({ project: p, index, id }: { project: Project; index: string; 
       <div className="stage" style={{ perspective: 1400 }}>
         <div className="scene-copy scene-copy--center anim k-txt">
           <p className="mono eyebrow">{index} — Web en todas las pantallas</p>
-          <TitleRow src={p.logo} color={p.logo_color} size="md" center>
+          <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts} size="md" center>
             <h2 className="h2">
               <Link href={`/proyectos/${p.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
                 {p.title}
