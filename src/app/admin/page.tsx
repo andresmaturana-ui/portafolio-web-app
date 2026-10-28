@@ -5,6 +5,7 @@ import { deleteProject } from "./actions";
 import { AdminHeader } from "./AdminHeader";
 import { requireUser } from "./guard";
 import { NotAdmin, NotConfigured } from "./Notices";
+import { img } from "@/lib/img";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <div className="admin-list">
                 {projects.map((p) => (
                   <div key={p.id} className="admin-row">
-                    <div className="admin-thumb">{p.cover_url && <img src={p.cover_url} alt="" />}</div>
+                    <div className="admin-thumb">{p.cover_url && <img src={img(p.cover_url, 256)} alt="" />}</div>
                     <div style={{ minWidth: 0 }}>
                       <h3>{p.title}</h3>
                       <span className="mono">

@@ -2,6 +2,7 @@ import { Browser, Phone, Tablet } from "@/components/Devices";
 import { FitBrowser } from "@/components/FitBrowser";
 import { TitleRow } from "@/components/TitleLogo";
 import { CATEGORIES, parseCaptions, parsePairs, type Project } from "@/lib/types";
+import { img } from "@/lib/img";
 
 const pad2 = (n: number) => String(n + 1).padStart(2, "0");
 
@@ -290,7 +291,7 @@ function ShotStack({ p, from }: { p: Project; from: number }) {
         .slice(from)
         .map((src, i) => (
           <figure key={src + i} className="tpl-shot rv">
-            <img src={src} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, imagen ${from + i + 1}`} loading={i ? "lazy" : "eager"} />
+            <img src={img(src, 1200)} alt={caps[src] ? `${p.title}: ${caps[src]}` : `${p.title}, imagen ${from + i + 1}`} loading={i ? "lazy" : "eager"} />
             {caps[src] && (
               <figcaption className="tpl-shot-cap">
                 <span className="mono">{pad2(from + i)}</span> {caps[src]}
@@ -318,7 +319,7 @@ export function FotoGaleria({ p }: { p: Project }) {
         <div className="tpl-masonry">
           {imgs.map((src, i) => (
             <a key={src + i} href={`#foto-${i}`} className="tpl-masonry-item rv" aria-label={`Ampliar imagen ${i + 1}`}>
-              <img src={src} alt={`${p.title}, foto ${i + 1}`} loading={i > 3 ? "lazy" : "eager"} />
+              <img src={img(src, 828)} alt={`${p.title}, foto ${i + 1}`} loading={i > 3 ? "lazy" : "eager"} />
             </a>
           ))}
         </div>
@@ -327,7 +328,7 @@ export function FotoGaleria({ p }: { p: Project }) {
       {imgs.map((src, i) => (
         <div key={"lb" + i} id={`foto-${i}`} className="lightbox" role="dialog" aria-label={`Foto ${i + 1} de ${imgs.length}`}>
           <a href="#cerrar" className="lightbox-bg" aria-label="Cerrar" />
-          <img src={src} alt={`${p.title}, foto ${i + 1}`} loading="lazy" />
+          <img src={img(src, 1920)} alt={`${p.title}, foto ${i + 1}`} loading="lazy" />
           <a href="#cerrar" className="lightbox-close" aria-label="Cerrar">✕</a>
           {i > 0 && <a href={`#foto-${i - 1}`} className="lightbox-nav lightbox-prev" aria-label="Anterior">←</a>}
           {i < imgs.length - 1 && <a href={`#foto-${i + 1}`} className="lightbox-nav lightbox-next" aria-label="Siguiente">→</a>}

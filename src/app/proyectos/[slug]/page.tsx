@@ -6,6 +6,7 @@ import { getProjectBySlug } from "@/lib/projects";
 import { site } from "@/lib/site";
 import { CATEGORIES, templateFor, type Project } from "@/lib/types";
 import { AppEscaparate, AppHistoria, FotoGaleria, WebGaleria, WebNavegador } from "./templates";
+import { img } from "@/lib/img";
 
 export const revalidate = 60;
 
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const kind = CATEGORIES.find((c) => c.value === p.category)?.label ?? "Proyecto";
   const title = `${p.title} · ${kind}`;
   const description = describe(p);
-  const images = p.cover_url ? [{ url: absolute(p.cover_url), alt: `${p.title}, ${kind.toLowerCase()} de ${site.name}` }] : undefined;
+  const images = p.cover_url ? [{ url: absolute(img(p.cover_url, 1200)), alt: `${p.title}, ${kind.toLowerCase()} de ${site.name}` }] : undefined;
   return {
     title,
     description,
@@ -73,7 +74,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           name: p.title,
           description: describe(p),
           url: `${site.url}/proyectos/${p.slug}`,
-          image: [p.cover_url, ...p.gallery].filter(Boolean).map((x) => absolute(x as string)),
+          image: [p.cover_url, ...p.gallery].filter(Boolean).map((x) => absolute(img(x as string, 1920))),
           ...(p.category === "app" ? { applicationCategory: "MobileApplication", operatingSystem: "Android, iOS, Web" } : {}),
           ...(p.link ? { sameAs: p.link } : {}),
           ...(p.year ? { dateCreated: String(p.year) } : {}),

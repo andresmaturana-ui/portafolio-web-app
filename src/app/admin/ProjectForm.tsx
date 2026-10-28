@@ -7,6 +7,7 @@ import { StickerBadge } from "@/components/StickerBadge";
 import { TitleLogo } from "@/components/TitleLogo";
 import { CATEGORIES, DEFAULT_TEMPLATE, parseCaptions, parsePairs, parseLogoOpts, parseSticker, STICKER_COLORS, STICKER_SIZES, TEMPLATES, type Category, type Project, type Sticker } from "@/lib/types";
 import { saveProject, type FormState } from "./actions";
+import { img } from "@/lib/img";
 
 const IMAGE_HINTS: Record<Category, string> = {
   app: "Cada imagen lleva su número (01, 02…), el mismo que se ve en la página del proyecto. Cámbialo con «Número» y escribe abajo qué muestra esa pantalla. La 01 es la pantalla principal; la 02 y la 03 van en los celulares laterales de la portada.",
@@ -200,7 +201,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
             {images.map((src, i) => (
               <div key={src + i} className="thumb-card">
               <div className="thumb">
-                <img src={src} alt={`Imagen ${i + 1}`} />
+                <img src={img(src, 256)} alt={`Imagen ${i + 1}`} />
                 <span className="thumb-badge">{i === 0 ? `${num(i)} · Portada` : num(i)}</span>
                 <div className="thumb-actions">
                   {i > 0 && (
@@ -290,7 +291,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
               {desktop.map((src, i) => (
                 <div key={src + i} className="thumb-card">
                 <div className="thumb thumb--wide">
-                  <img src={src} alt={`Escritorio ${i + 1}`} />
+                  <img src={img(src, 256)} alt={`Escritorio ${i + 1}`} />
                   <span className="thumb-badge">Escritorio {num(i)}</span>
                   <div className="thumb-actions">
                     {i > 0 && (
@@ -519,7 +520,7 @@ export function ProjectForm({ project, defaultCategory = "app" }: { project?: Pr
           {heroBg && (
             <div className="thumbs">
               <div className="thumb thumb--wide">
-                <img src={heroBg} alt="Fondo de la portada" />
+                <img src={img(heroBg, 256)} alt="Fondo de la portada" />
                 <div className="thumb-actions">
                   <button type="button" onClick={() => setHeroBg("")} aria-label="Quitar fondo">
                     ✕
@@ -605,7 +606,7 @@ function PairPicker({
           {!known && <option value={value}>Subida aparte</option>}
         </select>
       </label>
-      {value && <img className={`thumb-pair-img ${wide ? "thumb-pair-img--wide" : ""}`} src={value} alt="" />}
+      {value && <img className={`thumb-pair-img ${wide ? "thumb-pair-img--wide" : ""}`} src={img(value, 256)} alt="" />}
       <label className="thumb-pair-upload">
         Subir otra
         <input
