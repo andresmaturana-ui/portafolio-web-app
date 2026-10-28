@@ -7,6 +7,7 @@ import { createLiquid, liquidSupported } from "@/components/liquid";
 import { TitleLogo } from "@/components/TitleLogo";
 import { isLiquid, type HeroFx } from "@/lib/settings";
 import { STICKER_SIZES, type Sticker } from "@/lib/types";
+import { img } from "@/lib/img";
 
 export type HeroItem = {
   kind: "app" | "web" | "diseno";
@@ -152,7 +153,7 @@ function HeroFlow({ items, spin }: { items: HeroItem[]; spin: boolean }) {
             <span className="hd-backface" />
             {it.kind === "diseno" && (
               <div className="hd-poster">
-                <img src={it.src} alt="" />
+                <img src={img(it.src, 828)} alt="" />
               </div>
             )}
           </Link>

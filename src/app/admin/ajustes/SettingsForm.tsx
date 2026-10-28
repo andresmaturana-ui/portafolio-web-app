@@ -26,6 +26,7 @@ import {
 import { BUCKET } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/client";
 import { saveSettings, type SettingsState } from "../actions";
+import { img } from "@/lib/img";
 
 const COLORS: { name: "color_bg" | "color_text" | "color_accent"; label: string }[] = [
   { name: "color_accent", label: "Acento (botones, detalles)" },
@@ -320,7 +321,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
               {coverable.map((p) => (
                 <label key={p.slug} className={`pick ${isPicked(p.slug) ? "is-on" : ""}`}>
                   <input type="checkbox" checked={isPicked(p.slug)} onChange={() => togglePick(p.slug)} />
-                  <img src={p.images[0]} alt="" />
+                  <img src={img(p.images[0], 256)} alt="" />
                   <span>
                     <strong>{p.title}</strong>
                     <span className="mono">{p.category === "app" ? "App" : p.category === "web" ? "Web" : "Diseño"}</span>
@@ -342,7 +343,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                 {slides.map((slide, i) => (
                   <div key={slide.src + i} className="slide-row">
                     <div className="thumb">
-                      <img src={slide.src} alt={`Foto ${i + 1}`} />
+                      <img src={img(slide.src, 256)} alt={`Foto ${i + 1}`} />
                       <span className="thumb-badge">{i + 1}</span>
                     </div>
                     <div className="slide-fields">
@@ -398,7 +399,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
                             addSlides([{ src, title: pickedProject.title, client: pickedProject.client ?? undefined, year: pickedProject.year ? String(pickedProject.year) : undefined, slug: pickedProject.slug }])
                           }
                         >
-                          <img src={src} alt="" />
+                          <img src={img(src, 256)} alt="" />
                           <span className="thumb-badge">{added ? "Agregada" : "+ Agregar"}</span>
                         </button>
                       );
@@ -478,7 +479,7 @@ export function SettingsForm({ initial, projects }: { initial: Settings; project
             <div className={`hero-look-preview hero-pan look-${look.filter}`} style={{ "--tint": look.tint, "--amount": look.amount / 100 } as React.CSSProperties}>
               {slides.slice(0, 4).map((slide, i) => (
                 <figure key={slide.src + i} className="hero-slide">
-                  <img src={slide.src} alt="" />
+                  <img src={img(slide.src, 256)} alt="" />
                 </figure>
               ))}
             </div>

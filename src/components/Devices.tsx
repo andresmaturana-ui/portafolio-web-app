@@ -1,4 +1,5 @@
 // Mockups de dispositivos. Sin imagen muestran una interfaz esquemática.
+import { img } from "@/lib/img";
 
 type PhoneProps = {
   image?: string | null;
@@ -24,7 +25,7 @@ export function Phone({ image, className = "", feedClassName = "", alt = "", acc
             style={{ width: `${n * 100}%`, ["--end" as string]: `${(-(n - 1) / n) * 100}%` }}
           >
             {screens.map((src, i) => (
-              <img key={src + i} src={src} alt={i === 0 ? alt : ""} style={{ width: `${100 / n}%` }} />
+              <img key={src + i} src={img(src, 828)} alt={i === 0 ? alt : ""} style={{ width: `${100 / n}%` }} />
             ))}
           </div>
         </div>
@@ -35,7 +36,7 @@ export function Phone({ image, className = "", feedClassName = "", alt = "", acc
     <div className={`phone ${className}`}>
       <div className="screen">
         {image ? (
-          <img className={scroll === "vertical" ? `shot-y ${scrollClassName}` : ""} src={image} alt={alt} />
+          <img className={scroll === "vertical" ? `shot-y ${scrollClassName}` : ""} src={img(image, 828)} alt={alt} />
         ) : (
           <div className={`feed ${feedClassName}`} aria-hidden="true">
             <div className={`tile ${accent ? "tile--accent" : ""}`} style={{ height: 140 }} />
@@ -72,7 +73,7 @@ export function Browser({ image, url, title, className = "", siteClassName = "",
       <div className="browser-body">
         <div className={siteClassName}>
           {image ? (
-            <img className="site-shot" src={image} alt={alt} />
+            <img className="site-shot" src={img(image, 1200)} alt={alt} />
           ) : (
             <div style={{ padding: 28, display: "flex", flexDirection: "column", gap: 16 }} aria-hidden="true">
               <div className="tile" style={{ height: 180 }} />
@@ -94,7 +95,7 @@ export function Tablet({ image, className = "", alt = "" }: { image?: string | n
   return (
     <div className={`tablet ${className}`}>
       {image ? (
-        <img src={image} alt={alt} />
+        <img src={img(image, 1080)} alt={alt} />
       ) : (
         <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }} aria-hidden="true">
           <div className="tile" style={{ height: 110 }} />

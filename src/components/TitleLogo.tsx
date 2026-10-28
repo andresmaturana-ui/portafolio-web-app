@@ -1,13 +1,14 @@
 import { parseLogoOpts } from "@/lib/types";
+import { img } from "@/lib/img";
 
 // Logo chico del proyecto (si tiene). Con color, se pinta de ese color usando el logo como máscara:
 // sirve para SVG y PNG con fondo transparente.
 export function TitleLogo({ src, color, className = "" }: { src?: string | null; color?: string | null; className?: string }) {
   if (!src) return null;
-  if (!color) return <img className={`title-logo ${className}`} src={src} alt="" aria-hidden="true" />;
+  if (!color) return <img className={`title-logo ${className}`} src={img(src, 384)} alt="" aria-hidden="true" />;
   return (
     <span className={`title-logo title-logo--tint ${className}`} aria-hidden="true">
-      <img src={src} alt="" />
+      <img src={img(src, 384)} alt="" />
       <span style={{ background: color, WebkitMaskImage: `url("${src}")`, maskImage: `url("${src}")` }} />
     </span>
   );

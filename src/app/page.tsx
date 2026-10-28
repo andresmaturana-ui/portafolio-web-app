@@ -11,6 +11,7 @@ import { ContactForm } from "@/components/ContactForm";
 import { byCategory, getPublishedProjects } from "@/lib/projects";
 import { site } from "@/lib/site";
 import { parseSticker, type Project } from "@/lib/types";
+import { img } from "@/lib/img";
 
 export const revalidate = 60;
 
@@ -100,7 +101,7 @@ export default async function Home() {
               <div className="strip anim k-strip">
                 {photos.map((p) => (
                   <Link key={p.id} href={`/proyectos/${p.slug}`} className="photo">
-                    {p.cover_url && <img src={p.cover_url} alt={p.title} loading="lazy" />}
+                    {p.cover_url && <img src={img(p.cover_url, 828)} alt={p.title} loading="lazy" />}
                     {!p.cover_url && <span className="mono">{p.title}</span>}
                   </Link>
                 ))}
@@ -120,7 +121,7 @@ export default async function Home() {
               {designs.map((p) => (
                 <Link key={p.id} href={`/proyectos/${p.slug}`} className="card rv">
                   <span className="mono">{p.summary || "Diseño"}</span>
-                  <div className="card-media">{p.cover_url && <img src={p.cover_url} alt="" loading="lazy" />}</div>
+                  <div className="card-media">{p.cover_url && <img src={img(p.cover_url, 828)} alt="" loading="lazy" />}</div>
                   <TitleRow src={p.logo} color={p.logo_color} opts={p.logo_opts} size="sm">
                     <h3>{p.title}</h3>
                   </TitleRow>
@@ -199,7 +200,7 @@ export default async function Home() {
                   const caption = [slide.title, slide.client, slide.year].filter(Boolean).join(" · ");
                   const body = (
                     <>
-                      <img src={slide.src} alt={slide.title ?? ""} />
+                      <img src={img(slide.src, 1920)} alt={slide.title ?? ""} />
                       {caption && <figcaption className="mono">{caption}{slide.slug && " →"}</figcaption>}
                     </>
                   );
